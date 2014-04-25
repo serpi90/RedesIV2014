@@ -1,0 +1,16 @@
+nbproject
+comp-sala
+comp-cablecarril
+sala
+cablecarril
+persona
+lanzador
+terminador
+Semaphore.o
+SemaphoreArray.o
+Queue.o
+SharedMemory.o
+iCableCarril.o
+iSala.o
+CableCarril.o
+Sala.o
