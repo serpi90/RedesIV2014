@@ -90,4 +90,6 @@ struct personMessage {
 #include <cstdio>
 #include <sstream>
 #include <string>
+#include <unistd.h>
+
 #endif	/* INCLUDES_H */

@@ -2,6 +2,8 @@
 #include "includes.h"
 #include "Queue.cpp"
 #include "Helper.h"
+#include "Config.h"
+
 using namespace std;
 
 int main(int argc, char** argv)
@@ -22,6 +24,8 @@ int main(int argc, char** argv)
     ss << "Persona " << id << "(" << (M_PERS + id) << ")";
     owner = ss.str();
     ss.str("");
+
+    Config conf("persona.conf");
 
     in = new Queue<struct personMessage>(PATH, Q_PERSONA, owner);
     in->get();
@@ -46,6 +50,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+    Helper::doSleep( conf.getInt( "subir cc min" ), conf.getInt( "subir cc max" ) );
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -57,6 +62,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+    Helper::doSleep( conf.getInt( "bajar cc min" ), conf.getInt( "bajar cc max" ) );
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -64,6 +70,8 @@ int main(int argc, char** argv)
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+
+    Helper::doSleep( conf.getInt( "paseo arriba min" ), conf.getInt( "paseo arriba max" ) );
 
     msg.type = M_SALA_ARRIBA;
     msg.sender = M_PERS + id;
@@ -79,6 +87,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+    Helper::doSleep( conf.getInt( "subir cc min" ), conf.getInt( "subir cc max" ) );
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -90,6 +99,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+    Helper::doSleep( conf.getInt( "bajar cc min" ), conf.getInt( "bajar cc max" ) );
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -97,5 +107,6 @@ int main(int argc, char** argv)
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
+
     return 0;
 }

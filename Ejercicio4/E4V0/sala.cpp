@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "iSala.h"
 #include "Helper.h"
+#include "Config.h"
 
 int main(int argc, char** argv)
 {
@@ -18,10 +19,12 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
     iSala * s = new iSala(arg == "-abajo");
+
+    Config conf( "sala.conf" );
+
     while (true)
     {
         s->esperarPersona();
-        sleep(1);
         // TODO que esperar persona devuelva el id de la persona que entro
     }
     return 0;

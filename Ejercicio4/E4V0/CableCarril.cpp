@@ -1,5 +1,4 @@
 #include "CableCarril.h"
-#include "Semaphore.h"
 
 CableCarril::CableCarril()
 {
@@ -88,7 +87,7 @@ void CableCarril::estoy(bool abajo, long personas[CC_SIZE])
         ss << owner << " envie " << Helper::msgToString(msg.message) << " a " << msg.type << std::endl;
         Helper::output(stdout, ss);
         cc->receive(&msg, M_CABLE_CARRIL);
-        ss << owner << " recibi " << Helper::msgToString(msg.message) << " de" << msg.sender << std::endl;
+        ss << owner << " recibi " << Helper::msgToString(msg.message) << " de " << msg.sender << std::endl;
         ss << owner << " quedan " << pasajeros << " pasajeros por bajar " << std::endl;
         Helper::output(stdout, ss);
         // TODO verificar msg.message == BAJE

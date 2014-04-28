@@ -4,43 +4,46 @@ DFLAGS = -Wall -Wextra -ansi -pedantic-errors -g
 #LFLAGS = -lpthread
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
-CPROGS = comp-sala comp-cablecarril
-IPROGS = sala cablecarril persona
-LPROGS = lanzador terminador test
-PROGS = $(CPROGS) $(IPROGS) $(LPROGS)
-IPCH = Semaphore.o SemaphoreArray.o
-IPCC = Queue.o SharedMemory.o
-IPC = $(IPCH) $(IPCC)
-IOBJS =  iCableCarril.o iSala.o
-COBJS = CableCarril.o Sala.o
-HOBJS = Helper.o Config.o
-OBJS = $(IOBJS) $(COBJS) $(HOBJS)
+COMPONENTES = comp-sala comp-cablecarril
+PROGRAMAS = sala cablecarril persona
+LANZADORES = iniciador lanzador terminador
+PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
+IPC_CON_HEADER = Semaphore.o SemaphoreArray.o
+IPC_SIN_HEADER = Queue.o SharedMemory.o
+IPC = $(IPC_CON_HEADER) $(IPC_SIN_HEADER)
+INTERFACES =  iCableCarril.o iSala.o
+MODELO = CableCarril.o Sala.o
+ACCESORIOS = Helper.o Config.o
+OBJS = $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
 all: $(IPC) $(OBJS) $(PROGS)
 
-$(IPROGS): %: %.cpp $(IOBJS) Queue.o Helper.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(IOBJS) Queue.o Helper.o
+# Ejecutables
 
-$(CPROGS): %: %.cpp $(OBJS) $(IPC) Helper.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(COBJS) $(IPC) Helper.o
+$(PROGRAMAS): %: %.cpp $(INTERFACES) Queue.o Helper.o Config.o includes.h
+	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Helper.o Config.o
 
-$(LPROGS): %: %.cpp $(IPC) Helper.o includes.h Config.o
+$(COMPONENTES): %: %.cpp $(MODELO) $(IPC) Helper.o includes.h
+	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o 
+
+$(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o
 
-$(HOBJS): %.o: %.cpp %.h
+# Objetos
+
+$(MODELO): %.o: %.cpp %.h includes.h Helper.h Config.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(IOBJS): %.o: %.cpp %.h includes.h Helper.h
+$(INTERFACES): %.o: %.cpp %.h includes.h Helper.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(COBJS): %.o: %.cpp %.h includes.h Helper.h Config.o
+$(IPC_CON_HEADER) $(ACCESORIOS): %.o: %.cpp %.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(IPCH): %.o: %.cpp %.h
+$(IPC_SIN_HEADER): %.o: %.cpp
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(IPCC): %.o: %.cpp
-	$(C++) -c -o $@ $< $(CFLAGS)
+# Limpieza
 
 clean:
 	rm -f $(IPC) $(OBJS) $(PROGS) Helper.o Config.o
