@@ -34,6 +34,7 @@ void Sala::init()
     {
         in->receive(&msg, 0);
         ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
+	Helper::output(stdout, ss);
         if (msg.message != ESPERAR_PERSONA_ABAJO && msg.message != ESPERAR_PERSONA_ARRIBA)
         {
             ss << owner << " mensaje incorrecto" << Helper::msgToString(msg.message);
