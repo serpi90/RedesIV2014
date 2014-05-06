@@ -41,14 +41,20 @@ void CableCarril::init()
             switch (msg.message)
             {
                 case ESTOY_ABAJO:
+                    estoy(BOTTOM, msg.data.people);
+                    msg.message = ESTOY_ABAJO_OK;
+                    break;
                 case ESTOY_ARRIBA:
-                    estoy(msg.type == ESTOY_ABAJO, msg.data.people);
-                    msg.message = msg.message == ESTOY_ABAJO ? ESTOY_ABAJO_OK : ESTOY_ARRIBA_OK;
+                    estoy(TOP, msg.data.people);
+                    msg.message = ESTOY_ARRIBA_OK;
                     break;
                 case CARGAR_PERSONAS_ABAJO:
+                    cargarPersonasAbajo(msg.data.people);
+                    msg.message = CARGAR_PERSONAS_ABAJO_OK;
+                    break;
                 case CARGAR_PERSONAS_ARRIBA:
-                    cargarPersonas(msg.message == CARGAR_PERSONAS_ABAJO, msg.data.people);
-                    msg.message = msg.message == CARGAR_PERSONAS_ABAJO ? CARGAR_PERSONAS_ABAJO_OK : CARGAR_PERSONAS_ARRIBA_OK;
+                    cargarPersonasArriba(msg.data.people);
+                    msg.message = CARGAR_PERSONAS_ARRIBA_OK;
                     break;
                 default:
                     ss << owner << "mensaje incorrecto" << Helper::msgToString(msg.message) << std::endl;
@@ -65,14 +71,14 @@ void CableCarril::init()
     }
 }
 
-void CableCarril::estoy(bool abajo, long personas[CC_SIZE])
+void CableCarril::estoy(enum location location, long personas[CC_SIZE])
 {
     std::stringstream ss;
     int pasajeros;
     struct personMessage msg;
     mutex->wait();
     cableCarril->estadoCablecarril = WORKING;
-    cableCarril->ubicacionCablecarril = abajo ? DOWN : UP;
+    cableCarril->ubicacionCablecarril = location;
     mutex->post();
     for (pasajeros = 0; pasajeros < CC_SIZE && personas[pasajeros] != 0; pasajeros++);
     ss << owner << " tengo " << pasajeros << " para bajar" << std::endl;
@@ -94,52 +100,38 @@ void CableCarril::estoy(bool abajo, long personas[CC_SIZE])
     }
 }
 
-void CableCarril::cargarPersonas(bool abajo, long personas[CC_SIZE])
+void CableCarril::cargarPersonasAbajo(long personas[CC_SIZE])
 {
     std::stringstream ss;
     Semaphore * llenaAbajo = new Semaphore(llena, 0);
-    Semaphore * llenaArriba = new Semaphore(llena, 1);
     struct personMessage msg;
     mutex->wait();
     if (cableCarril->cantAbajo == 0 && cableCarril->cantArriba == 0)
     {
         cableCarril->estadoCablecarril = WAITING;
         mutex->post();
-        ss << owner << " sala de " << (abajo ? "abajo" : "arriba") << " vacia, esperando" << std::endl;
+        ss << owner << " sala de abajo vacia, esperando" << std::endl;
         Helper::output(stdout, ss);
         vacia->wait();
-        ss << owner << " sala de " << (abajo ? "abajo" : "arriba") << " ya no esta vacia" << std::endl;
+        ss << owner << " sala de abajo ya no esta vacia" << std::endl;
         Helper::output(stdout, ss);
         mutex->wait();
         cableCarril->estadoCablecarril = WORKING;
     }
     int pasajeros = 0;
     // Mientras haya personas
-    while (pasajeros < CC_SIZE && (abajo ? cableCarril->cantAbajo : cableCarril->cantArriba) != 0)
+    while (pasajeros < CC_SIZE && cableCarril->cantAbajo != 0)
     {
-        if (abajo)
+        personas[pasajeros] = cableCarril->personasAbajo[cableCarril->pReadAbajo];
+        cableCarril->pReadAbajo++;
+        cableCarril->cantAbajo--;
+        if (cableCarril->cantAbajo == ROOM_SIZE - 1 && cableCarril->estadoAbajo == WAITING)
         {
-            personas[pasajeros] = cableCarril->personasAbajo[cableCarril->pReadAbajo];
-            cableCarril->pReadAbajo++;
-            cableCarril->cantAbajo--;
-            if (cableCarril->cantAbajo == ROOM_SIZE - 1 && cableCarril->estadoAbajo == WAITING)
-            {
-                Helper::output(stdout, "Abajo estaba lleno despertando a la sala de abajo\n");
-                llenaAbajo->post();
-                cableCarril->estadoAbajo = WORKING;
-            }
-        } else
-        {
-            personas[pasajeros] = cableCarril->personasArriba[cableCarril->pReadArriba];
-            cableCarril->pReadArriba++;
-            cableCarril->cantArriba--;
-            if (cableCarril->cantArriba == ROOM_SIZE - 1 && cableCarril->estadoArriba == WAITING)
-            {
-                Helper::output(stdout, "Arriba estaba lleno despertando a la sala de arriba\n");
-                llenaArriba->post();
-                cableCarril->estadoArriba = WORKING;
-            }
+            Helper::output(stdout, "Abajo estaba lleno despertando a la sala de abajo\n");
+            llenaAbajo->post();
+            cableCarril->estadoAbajo = WORKING;
         }
+
         mutex->post();
         msg.type = personas[pasajeros];
         msg.sender = M_CABLE_CARRIL;
@@ -156,4 +148,58 @@ void CableCarril::cargarPersonas(bool abajo, long personas[CC_SIZE])
     }
     mutex->post();
     personas[pasajeros] = 0;
+    ss << owner << " Cargue " << pasajeros << " persona" << (pasajeros == 1 ? "" : "s") << std::endl;
+    Helper::output(stdout, ss);
+}
+
+void CableCarril::cargarPersonasArriba(long personas[CC_SIZE])
+{
+    std::stringstream ss;
+    Semaphore * llenaArriba = new Semaphore(llena, 1);
+    struct personMessage msg;
+    mutex->wait();
+    if (cableCarril->cantAbajo == 0 && cableCarril->cantArriba == 0)
+    {
+        cableCarril->estadoCablecarril = WAITING;
+        mutex->post();
+        ss << owner << " sala de arriba vacia, esperando" << std::endl;
+        Helper::output(stdout, ss);
+        vacia->wait();
+        ss << owner << " sala de arriba ya no esta vacia" << std::endl;
+        Helper::output(stdout, ss);
+        mutex->wait();
+        cableCarril->estadoCablecarril = WORKING;
+    }
+    int pasajeros = 0;
+    // Mientras haya personas
+    while (pasajeros < CC_SIZE && cableCarril->cantArriba != 0)
+    {
+        personas[pasajeros] = cableCarril->personasArriba[cableCarril->pReadArriba];
+        cableCarril->pReadArriba++;
+        cableCarril->cantArriba--;
+        if (cableCarril->cantArriba == ROOM_SIZE - 1 && cableCarril->estadoArriba == WAITING)
+        {
+            Helper::output(stdout, "Arriba estaba lleno despertando a la sala de arriba\n");
+            llenaArriba->post();
+            cableCarril->estadoArriba = WORKING;
+        }
+
+        mutex->post();
+        msg.type = personas[pasajeros];
+        msg.sender = M_CABLE_CARRIL;
+        msg.message = SUBIR;
+        ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << msg.type << std::endl;
+        Helper::output(stdout, ss);
+        persona->send(&msg);
+        cc->receive(&msg, M_CABLE_CARRIL);
+        ss << owner << " recibi " << Helper::msgToString(msg.message) << " de " << msg.sender << std::endl;
+        Helper::output(stdout, ss);
+        //TODO verificar msg.message = SUBI;
+        pasajeros++;
+        mutex->wait();
+    }
+    mutex->post();
+    personas[pasajeros] = 0;
+    ss << owner << " Cargue " << pasajeros << " persona" << (pasajeros == 1 ? "" : "s") << std::endl;
+    Helper::output(stdout, ss);
 }

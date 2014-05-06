@@ -8,7 +8,7 @@
 
 // IPC Definitions
 
-#define PATH "/home/knoppix/Maestri/Ejercicio4/V0"
+#define PATH "/home/knoppix/Maestri/Ejercicio4/E4V0"
 #define Q_SALA_TO_INTERFACE 1
 #define Q_SALA_FROM_INTERFACE Q_SALA_TO_INTERFACE + 1
 #define Q_CC_TO_INTERFACE Q_SALA_FROM_INTERFACE + 1
@@ -35,7 +35,7 @@ enum state {
 };
 
 enum location {
-    DOWN, UP
+    BOTTOM, TOP
 };
 
 struct cableCarril {

@@ -9,24 +9,26 @@ int main()
     bool abajo = true, arriba = false;
     std::stringstream ss;
     long personas[CC_SIZE];
-    for (int i = 0; i < CC_SIZE; i++)
+    int cp;
+    for (cp = 0; cp < CC_SIZE; cp++)
     {
-        personas[i] = 0;
+        personas[cp] = 0;
     }
     Config conf("cablecarril.conf");
     while (true)
     {
-	// Aviso que llegue abajo.
+        // Aviso que llegue abajo.
         cc->estoy(abajo, personas);
-	// Aviso que terminaron de bajar todos para que comiencen a subir.
+        // Aviso que terminaron de bajar todos para que comiencen a subir.
         cc->cargarPersonas(abajo, personas);
-	Helper::doSleep( conf.getInt("viaje min") , conf.getInt("viaje max") );
-	Helper::output( stdout, "CableCarril Viajando" );
-	// Aviso que llegue arriba.
+
+        Helper::doSleep(conf.getInt("viaje min", 0), conf.getInt("viaje max", 0));
+
+        // Aviso que llegue arriba.
         cc->estoy(arriba, personas);
-	// Aviso que terminaron de bajar todos para que comiencen a subir.
+        // Aviso que terminaron de bajar todos para que comiencen a subir.
         cc->cargarPersonas(arriba, personas);
-	Helper::doSleep( conf.getInt("viaje min") , conf.getInt("viaje max") );
+        Helper::doSleep(conf.getInt("viaje min", 0), conf.getInt("viaje max", 0));
     }
     return 0;
 }

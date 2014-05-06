@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep( conf.getInt( "subir cc min" ), conf.getInt( "subir cc max" ) );
+    Helper::doSleep(conf.getInt("subir cc min",1), conf.getInt("subir cc max",1));
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep( conf.getInt( "bajar cc min" ), conf.getInt( "bajar cc max" ) );
+    Helper::doSleep(conf.getInt("bajar cc min",1), conf.getInt("bajar cc max",1));
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
-    Helper::doSleep( conf.getInt( "paseo arriba min" ), conf.getInt( "paseo arriba max" ) );
+    Helper::doSleep(conf.getInt("paseo arriba min",1), conf.getInt("paseo arriba max",1));
 
     msg.type = M_SALA_ARRIBA;
     msg.sender = M_PERS + id;
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep( conf.getInt( "subir cc min" ), conf.getInt( "subir cc max" ) );
+    Helper::doSleep(conf.getInt("subir cc min",1), conf.getInt("subir cc max",1));
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep( conf.getInt( "bajar cc min" ), conf.getInt( "bajar cc max" ) );
+    Helper::doSleep(conf.getInt("bajar cc min",1), conf.getInt("bajar cc max",1));
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;

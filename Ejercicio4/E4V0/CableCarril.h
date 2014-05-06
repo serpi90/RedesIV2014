@@ -10,8 +10,9 @@ class CableCarril {
 public:
     CableCarril();
     void init();
-    void estoy(bool abajo, long personas[CC_SIZE]);
-    void cargarPersonas(bool abajo, long personas[CC_SIZE]);
+    void estoy(enum location location, long personas[CC_SIZE]);
+    void cargarPersonasAbajo(long personas[CC_SIZE]);
+    void cargarPersonasArriba(long personas[CC_SIZE]);
 private:
     Queue<struct iMessage> * in, * out;
     Queue<struct personMessage>* persona, * cc;

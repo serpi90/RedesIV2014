@@ -27,50 +27,55 @@ Sala::Sala()
 void Sala::init()
 {
     std::stringstream ss;
-    std::string s;
     struct iMessage msg;
     pid_t pid;
     while (true)
     {
         in->receive(&msg, 0);
-        ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
-	Helper::output(stdout, ss);
-        if (msg.message != ESPERAR_PERSONA_ABAJO && msg.message != ESPERAR_PERSONA_ARRIBA)
+        pid = fork();
+        if (pid == 0)
         {
-            ss << owner << " mensaje incorrecto" << Helper::msgToString(msg.message);
-            Helper::output(stderr, ss);
-        } else
-        {
-            pid = fork();
-            if (pid < 0)
+            ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
+            Helper::output(stdout, ss);
+            switch (msg.message)
             {
-                perror("Sala: fork");
-            } else if (pid == 0)
-            {
-                bool abajo = msg.message == ESPERAR_PERSONA_ABAJO;
-                Helper::output(stdout, s);
-                ingresarPersona(abajo);
-                msg.type = msg.sender;
-                msg.sender = abajo ? M_SALA_ABAJO : M_SALA_ARRIBA;
-                msg.message = abajo ? ESPERAR_PERSONA_ABAJO_OK : ESPERAR_PERSONA_ARRIBA_OK;
-                out->send(&msg);
-                ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
-                Helper::output(stdout, ss);
-                exit(EXIT_SUCCESS);
+                case ESPERAR_PERSONA_ABAJO:
+                    msg.type = msg.sender;
+                    msg.sender = M_SALA_ABAJO;
+                    msg.message = ESPERAR_PERSONA_ABAJO_OK;
+                    ingresarPersonaAbajo();
+                    break;
+                case ESPERAR_PERSONA_ARRIBA:
+                    msg.type = msg.sender;
+                    msg.sender = M_SALA_ARRIBA;
+                    msg.message = ESPERAR_PERSONA_ARRIBA_OK;
+                    ingresarPersonaArriba();
+                    break;
+                default:
+                    ss << owner << " mensaje incorrecto" << Helper::msgToString(msg.message);
+                    Helper::output(stderr, ss);
+                    exit(EXIT_FAILURE);
             }
+            out->send(&msg);
+            ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
+            Helper::output(stdout, ss);
+            exit(EXIT_SUCCESS);
+        } else if (pid < 0)
+        {
+            perror("Sala: fork");
         }
     }
 }
 
-void Sala::ingresarPersona(bool abajo)
+void Sala::ingresarPersonaAbajo()
 {
     std::stringstream ss;
     struct personMessage msg;
-    Queue<struct personMessage> * q = abajo ? salaAbajo : salaArriba;
-    Semaphore * semLlena = new Semaphore(llena, abajo ? 0 : 1);
+    Queue<struct personMessage> * q = salaAbajo;
+    Semaphore * semLlena = new Semaphore(llena, 0);
     ss << owner << " esperando persona" << std::endl;
     Helper::output(stdout, ss);
-    q->receive(&msg, abajo ? M_SALA_ABAJO : M_SALA_ARRIBA);
+    q->receive(&msg, M_SALA_ABAJO);
     ss << owner << " recibi: " << Helper::msgToString(msg.message) << " de " << (msg.sender) << std::endl;
     Helper::output(stdout, ss);
     if (msg.message != QUIERO_ENTRAR)
@@ -80,46 +85,83 @@ void Sala::ingresarPersona(bool abajo)
         exit(EXIT_FAILURE);
     }
     mutex->wait();
-    bool full = (abajo ? cableCarril->cantAbajo : cableCarril->cantArriba) == ROOM_SIZE;
-    if (full)
+    if (cableCarril->cantAbajo == ROOM_SIZE)
     {
-        ss << owner << " sala de " << (abajo ? "abajo" : "arriba") << " llena" << std::endl;
+        ss << owner << " sala de abajo llena" << std::endl;
         Helper::output(stdout, ss);
-        if (abajo)
-        {
-            cableCarril->estadoAbajo = WAITING;
-        } else
-        {
-            cableCarril->estadoArriba = WAITING;
-        }
+        cableCarril->estadoAbajo = WAITING;
         mutex->post();
         semLlena->wait();
         mutex->wait();
     }
-    if (abajo)
-    {
-        cableCarril->personasAbajo[cableCarril->pWriteAbajo] = msg.sender;
-        cableCarril->pWriteAbajo++;
-        cableCarril->cantAbajo++;
-    } else
-    {
-        cableCarril->personasArriba[cableCarril->pWriteArriba] = msg.sender;
-        cableCarril->pWriteArriba++;
-        cableCarril->cantArriba++;
-    }
-    bool wasFull = (abajo ? cableCarril->cantAbajo : cableCarril->cantArriba) == 1;
-    bool cablecarrilEsperando = cableCarril->estadoCablecarril == WAITING;
+
+    cableCarril->personasAbajo[cableCarril->pWriteAbajo] = msg.sender;
+    cableCarril->pWriteAbajo++;
+    cableCarril->cantAbajo++;
+
+    bool wasFull = cableCarril->cantAbajo == 1;
+    bool ccWaiting = cableCarril->estadoCablecarril == WAITING;
     mutex->post();
 
     msg.type = msg.sender;
-    msg.sender = abajo ? M_SALA_ABAJO : M_SALA_ARRIBA;
+    msg.sender = M_SALA_ABAJO;
     msg.message = ENTRA;
     ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << (msg.type) << std::endl;
     Helper::output(stdout, ss);
     persona->send(&msg);
-    if (wasFull && cablecarrilEsperando)
+    if (wasFull && ccWaiting)
     {
-        ss << owner << " de " << (abajo ? "abajo" : "arriba") << " estaba vacia despertando al cablecarril" << std::endl;
+        ss << owner << " de abajo estaba vacia despertando al cablecarril" << std::endl;
+        Helper::output(stdout, ss);
+        vacia->post();
+    }
+}
+
+void Sala::ingresarPersonaArriba()
+{
+    std::stringstream ss;
+    struct personMessage msg;
+    Queue<struct personMessage> * q = salaArriba;
+    Semaphore * semLlena = new Semaphore(llena, 0);
+    ss << owner << " esperando persona" << std::endl;
+    Helper::output(stdout, ss);
+    q->receive(&msg, M_SALA_ARRIBA);
+    ss << owner << " recibi: " << Helper::msgToString(msg.message) << " de " << (msg.sender) << std::endl;
+    Helper::output(stdout, ss);
+    if (msg.message != QUIERO_ENTRAR)
+    {
+        ss << owner << "mensaje incorrecto" << Helper::msgToString(msg.message);
+        Helper::output(stderr, ss);
+        exit(EXIT_FAILURE);
+    }
+    mutex->wait();
+    if (cableCarril->cantArriba == ROOM_SIZE)
+    {
+        ss << owner << " sala de arriba llena" << std::endl;
+        Helper::output(stdout, ss);
+        cableCarril->estadoArriba = WAITING;
+        mutex->post();
+        semLlena->wait();
+        mutex->wait();
+    }
+
+    cableCarril->personasArriba[cableCarril->pWriteArriba] = msg.sender;
+    cableCarril->pWriteArriba++;
+    cableCarril->cantArriba++;
+
+    bool wasFull = cableCarril->cantArriba == 1;
+    bool ccWaiting = cableCarril->estadoCablecarril == WAITING;
+    mutex->post();
+
+    msg.type = msg.sender;
+    msg.sender = M_SALA_ARRIBA;
+    msg.message = ENTRA;
+    ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << (msg.type) << std::endl;
+    Helper::output(stdout, ss);
+    persona->send(&msg);
+    if (wasFull && ccWaiting)
+    {
+        ss << owner << " de arriba estaba vacia despertando al cablecarril" << std::endl;
         Helper::output(stdout, ss);
         vacia->post();
     }

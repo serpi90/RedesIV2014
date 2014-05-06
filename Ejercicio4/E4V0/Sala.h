@@ -24,7 +24,8 @@ private:
     struct cableCarril * cableCarril;
     bool abajo;
 
-    void ingresarPersona(bool abajo);
+    void ingresarPersonaAbajo();
+    void ingresarPersonaArriba();
 };
 
 #endif	/* SALA_H */
