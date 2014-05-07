@@ -30,7 +30,7 @@ void CableCarril::init()
     while (true)
     {
         in->receive(&msg, 0);
-        ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
+        ss << owner << " recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
         Helper::output(stdout, ss);
         pid = fork();
         if (pid < 0)
@@ -64,7 +64,7 @@ void CableCarril::init()
             msg.type = msg.sender;
             msg.sender = M_CABLE_CARRIL;
             out->send(&msg);
-            ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
+            ss << owner << " envie " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
             Helper::output(stdout, ss);
             exit(EXIT_SUCCESS);
         }
@@ -128,12 +128,13 @@ void CableCarril::cargarPersonas(enum location ubicacion, long personas[CC_SIZE]
         registro->cc.estado = WORKING;
     }
     int cantPersonas = 0;
-    // Mientras haya personas
+    // Cargar las personas que esten en la sala
     while (cantPersonas < CC_SIZE && sala->cantidad > 0)
     {
         personas[cantPersonas] = sala->personas[sala->pRead];
         sala->pRead++;
         sala->cantidad--;
+        // Si la sala estaba llena, avisar a la sala que puede seguir ingresando personas
         if (sala->cantidad == ROOM_SIZE - 1 && sala->estado == WAITING)
         {
             ss << nombreSala << " estaba lleno, despertando a la sala de " << nombreSala << std::endl;
@@ -142,12 +143,14 @@ void CableCarril::cargarPersonas(enum location ubicacion, long personas[CC_SIZE]
             sala->estado = WORKING;
         }
         mutex->post();
+        // Avisar a la persona que suba
         msg.type = personas[cantPersonas];
         msg.sender = M_CABLE_CARRIL;
         msg.message = SUBIR;
         ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << msg.type << std::endl;
         Helper::output(stdout, ss);
         persona->send(&msg);
+        // Esperar que la persona conteste que subio
         cc->receive(&msg, M_CABLE_CARRIL);
         cantPersonas++;
         if (msg.message == SUBI)

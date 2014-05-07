@@ -43,13 +43,13 @@ void Sala::init()
                     msg.type = msg.sender;
                     msg.sender = M_SALA_ABAJO;
                     msg.message = ESPERAR_PERSONA_ABAJO_OK;
-                    ingresarPersona(BOTTOM);
+                    esperarPersona(BOTTOM);
                     break;
                 case ESPERAR_PERSONA_ARRIBA:
                     msg.type = msg.sender;
                     msg.sender = M_SALA_ARRIBA;
                     msg.message = ESPERAR_PERSONA_ARRIBA_OK;
-                    ingresarPersona(TOP);
+                    esperarPersona(TOP);
                     break;
                 default:
                     ss << owner << " \033[41m\033[30mError\33[0m mensaje incorrecto" << Helper::msgToString(msg.message);
@@ -67,7 +67,7 @@ void Sala::init()
     }
 }
 
-void Sala::ingresarPersona(enum location location)
+void Sala::esperarPersona(enum location location)
 {
     std::stringstream ss;
     struct personMessage msg;
@@ -91,6 +91,7 @@ void Sala::ingresarPersona(enum location location)
         myId = M_SALA_ARRIBA;
         semLlena = new Semaphore(llena, 1);
     }
+    // Esperar a que alguien quiera entrar
     ss << owner << " esperando persona" << std::endl;
     Helper::output(stdout, ss);
     q->receive(&msg, myId);
@@ -112,6 +113,7 @@ void Sala::ingresarPersona(enum location location)
         mutex->post();
         semLlena->wait();
         mutex->wait();
+        sala->estado = WORKING;
     }
     mutex->post();
     // Avisar a la persona que puede entrar

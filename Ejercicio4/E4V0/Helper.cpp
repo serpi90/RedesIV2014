@@ -27,29 +27,29 @@ std::string Helper::msgToString(enum iMessageType m)
     switch (m)
     {
         case ESPERAR_PERSONA_ABAJO:
-            return "\033[1;34mESPERAR PERSONA ABAJO\033[0m";
+            return "\033[1;34miESPERAR PERSONA ABAJO\033[0m";
         case ESPERAR_PERSONA_ABAJO_OK:
-            return "\033[1;34mESPERAR PERSONA ABAJO OK\033[0m";
+            return "\033[1;34miESPERAR PERSONA ABAJO OK\033[0m";
         case ESPERAR_PERSONA_ARRIBA:
-            return "\033[1;32mESPERAR PERSONA ARRIBA\033[0m";
+            return "\033[1;32miESPERAR PERSONA ARRIBA\033[0m";
         case ESPERAR_PERSONA_ARRIBA_OK:
-            return "\033[1;32mESPERAR PERSONA ARRIBA OK\033[0m";
+            return "\033[1;32miESPERAR PERSONA ARRIBA OK\033[0m";
         case ESTOY_ABAJO:
-            return "\033[1;31mESTOY ABAJO\033[0m";
+            return "\033[1;31miESTOY ABAJO\033[0m";
         case ESTOY_ABAJO_OK:
-            return "\033[1;31mESTOY ABAJO OK\033[0m";
+            return "\033[1;31miESTOY ABAJO OK\033[0m";
         case ESTOY_ARRIBA:
-            return "\033[1;37mESTOY ARRIBA\033[0m";
+            return "\033[1;37miESTOY ARRIBA\033[0m";
         case ESTOY_ARRIBA_OK:
-            return "\033[1;37mESTOY ARRIBA OK\033[0m";
+            return "\033[1;37miESTOY ARRIBA OK\033[0m";
         case CARGAR_PERSONAS_ABAJO:
-            return "\033[1;38mCARGAR PERSONAS ABAJO\033[0m";
+            return "\033[1;38miCARGAR PERSONAS ABAJO\033[0m";
         case CARGAR_PERSONAS_ABAJO_OK:
-            return "\033[1;38mCARGAR PERSONAS ABAJO OK\033[0m";
+            return "\033[1;38miCARGAR PERSONAS ABAJO OK\033[0m";
         case CARGAR_PERSONAS_ARRIBA:
-            return "\033[1;39mCARGAR PERSONAS ARRIBA\033[0m";
+            return "\033[1;39miCARGAR PERSONAS ARRIBA\033[0m";
         case CARGAR_PERSONAS_ARRIBA_OK:
-            return "\033[1;39mCARGAR PERSONAS ARRIBA OK\033[0m";
+            return "\033[1;39miCARGAR PERSONAS ARRIBA OK\033[0m";
         default:
             std::stringstream ss;
             ss << m;

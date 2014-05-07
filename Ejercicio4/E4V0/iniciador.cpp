@@ -31,10 +31,10 @@ int main()
     shm->create();
     registro = shm->attach();
 
-    registro->cc.estado = WAITING;
+    registro->cc.estado = WORKING;
     registro->cc.ubicacion = BOTTOM;
 
-    registro->abajo.estado = WAITING;
+    registro->abajo.estado = WORKING;
     registro->abajo.cantidad = 0;
     registro->abajo.pRead = 0;
     registro->abajo.pWrite = 0;
@@ -43,7 +43,7 @@ int main()
         registro->abajo.personas[i] = 0;
     }
 
-    registro->arriba.estado = WAITING;
+    registro->arriba.estado = WORKING;
     registro->arriba.cantidad = 0;
     registro->arriba.pRead = 0;
     registro->arriba.pWrite = 0;

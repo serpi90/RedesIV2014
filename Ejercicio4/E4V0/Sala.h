@@ -22,7 +22,7 @@ private:
     Semaphore * vacia;
     std::string owner;
     struct registro * registro;
-    void ingresarPersona(enum location location);
+    void esperarPersona(enum location location);
 };
 
 #endif	/* SALA_H */
