@@ -1,5 +1,6 @@
 C++ = g++
-DFLAGS = -Wall -Wextra -ansi -pedantic-errors -g
+DFLAGS = -Wall -Wextra -ansi -pedantic-errors
+# -g
 #OFLAGS = -O3
 #LFLAGS = -lpthread
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
@@ -16,9 +17,12 @@ MODELO = CableCarril.o Sala.o
 ACCESORIOS = Helper.o Config.o
 OBJS = $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
-all: $(IPC) $(OBJS) $(PROGS)
+all: $(IPC) $(OBJS) $(PROGS) shmstat
 
 # Ejecutables
+
+shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o includes.h
+	$(C++) -o $@ $< $(CFLAGS) Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o
 
 $(PROGRAMAS): %: %.cpp $(INTERFACES) Queue.o Helper.o Config.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Helper.o Config.o

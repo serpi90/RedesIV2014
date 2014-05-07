@@ -79,3 +79,30 @@ std::string Helper::msgToString(enum personMessageType m)
             return ss.str();
     }
 }
+
+std::string Helper::msgToString(enum state s)
+{
+    switch (s)
+    {
+        case WAITING: return "WAITING";
+        case WORKING: return "WORKING";
+        case TRAVELLING: return "TRAVELLING";
+        default:
+            std::stringstream ss;
+            ss << s;
+            return ss.str();
+    }
+}
+
+std::string Helper::msgToString(enum location l)
+{
+    switch (l)
+    {
+        case BOTTOM: return "Abajo";
+        case TOP: return "Arriba";
+        default:
+            std::stringstream ss;
+            ss << l;
+            return ss.str();
+    }
+}

@@ -102,6 +102,7 @@ void Sala::ingresarPersona(enum location location)
         Helper::output(stderr, ss);
         exit(EXIT_FAILURE);
     }
+    // Esperar a que haya lugar en la sala
     mutex->wait();
     if (sala->cantidad == ROOM_SIZE)
     {
@@ -112,25 +113,25 @@ void Sala::ingresarPersona(enum location location)
         semLlena->wait();
         mutex->wait();
     }
-
-    sala->personas[sala->pWrite] = msg.sender;
-    sala->pWrite++;
-    sala->cantidad++;
-
-    bool wasFull = sala->cantidad == 1;
-    bool ccWaiting = registro->cc.estado == WAITING;
     mutex->post();
-
+    // Avisar a la persona que puede entrar
     msg.type = msg.sender;
     msg.sender = myId;
     msg.message = ENTRA;
     ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << (msg.type) << std::endl;
     Helper::output(stdout, ss);
     persona->send(&msg);
-    if (wasFull && ccWaiting)
+    mutex->wait();
+    // Guardar los datos de la persona
+    sala->personas[sala->pWrite] = msg.type;
+    sala->pWrite++;
+    sala->cantidad++;
+    // Avisar al cablecarril si estaba esperando
+    if (sala->cantidad == 1 && registro->cc.estado == WAITING)
     {
         ss << owner << " de " << nombreSala << " estaba vacia despertando al cablecarril" << std::endl;
         Helper::output(stdout, ss);
         vacia->post();
     }
+    mutex->post();
 }

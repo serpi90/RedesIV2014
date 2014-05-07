@@ -1,6 +1,5 @@
 #include "Config.h"
 #include <algorithm>
-#include <stdexcept>
 #include <fstream>
 
 #define MAX_LINE_SIZE 256
@@ -28,10 +27,11 @@ Config::Config(std::string filename)
 
 std::string Config::getString(std::string key, std::string defaultValue)
 {
-    try
+    std::map<std::string, std::string>::iterator it = properties.find(key);
+    if (it != properties.end())
     {
-        return properties.at(key);
-    } catch (std::out_of_range e)
+        return it->second;
+    } else
     {
         return defaultValue;
     }
@@ -39,12 +39,11 @@ std::string Config::getString(std::string key, std::string defaultValue)
 
 int Config::getInt(std::string key, int defaultValue)
 {
-    std::string value;
-    try
+    std::map<std::string, std::string>::iterator it = properties.find(key);
+    if (it != properties.end())
     {
-        value = properties.at(key);
-        return atoi(value.c_str());
-    } catch (std::out_of_range e)
+        return atoi(it->second.c_str());
+    } else
     {
         return defaultValue;
     }

@@ -10,6 +10,8 @@ public:
     Helper() { srand(time(NULL));};
     static std::string msgToString(enum iMessageType);
     static std::string msgToString(enum personMessageType);
+    static std::string msgToString(enum state);
+    static std::string msgToString(enum location);
     static void output(FILE*, std::stringstream&);
     static void output(FILE*, std::string);
     static unsigned int doSleep( int min, int max );

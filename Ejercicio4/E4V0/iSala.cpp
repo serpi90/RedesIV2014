@@ -20,9 +20,9 @@ void iSala::esperarPersona()
     msg.message = abajo ? ESPERAR_PERSONA_ABAJO : ESPERAR_PERSONA_ARRIBA;
     msg.sender = msg.type;
     out->send(&msg);
-    //ss << owner << " Enviando " << Helper::msgToString(msg.message) << std::endl;
-    //Helper::output(stdout, ss);
+    ss << owner << " Enviando " << Helper::msgToString(msg.message) << std::endl;
+    Helper::output(stdout, ss);
     in->receive(&msg, 0);
-    //ss << owner << " Recibi " << Helper::msgToString(msg.message) << std::endl;
-    //Helper::output(stdout, ss);
+    ss << owner << " Recibi " << Helper::msgToString(msg.message) << std::endl;
+    Helper::output(stdout, ss);
 }
