@@ -16,16 +16,13 @@ public:
 private:
     Queue<struct iMessage> * in, * out;
     Queue<struct personMessage>* persona, * salaAbajo, * salaArriba;
-    SharedMemory<struct cableCarril> * shm;
+    SharedMemory<struct registro> * shm;
     Semaphore * mutex;
     SemaphoreArray * llena;
     Semaphore * vacia;
     std::string owner;
-    struct cableCarril * cableCarril;
-    bool abajo;
-
-    void ingresarPersonaAbajo();
-    void ingresarPersonaArriba();
+    struct registro * registro;
+    void ingresarPersona(enum location location);
 };
 
 #endif	/* SALA_H */

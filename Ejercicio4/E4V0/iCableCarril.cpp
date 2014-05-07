@@ -29,11 +29,11 @@ void iCableCarril::estoy(bool abajo, long personas[CC_SIZE])
         msg.data.people[i] = 0;
     }
     out->send(&msg);
-    ss << owner << " Enviando " << Helper::msgToString(msg.message) << " con " << i << " personas" << std::endl;
-    Helper::output(stdout, ss);
+    //ss << owner << " Enviando " << Helper::msgToString(msg.message) << " con " << i << " personas" << std::endl;
+    //Helper::output(stdout, ss);
     in->receive(&msg, this->id);
-    ss << owner << " Recibi " << Helper::msgToString(msg.message) << std::endl;
-    Helper::output(stdout, ss);
+    //ss << owner << " Recibi " << Helper::msgToString(msg.message) << std::endl;
+    //Helper::output(stdout, ss);
 }
 
 void iCableCarril::cargarPersonas(bool abajo, long personas[CC_SIZE])
@@ -43,12 +43,12 @@ void iCableCarril::cargarPersonas(bool abajo, long personas[CC_SIZE])
     msg.type = M_CABLE_CARRIL;
     msg.sender = this->id;
     msg.message = abajo ? CARGAR_PERSONAS_ABAJO : CARGAR_PERSONAS_ARRIBA;
-    ss << owner << " enviando " << Helper::msgToString(msg.message) << std::endl;
-    Helper::output(stdout, ss);
+    //ss << owner << " enviando " << Helper::msgToString(msg.message) << std::endl;
+    //Helper::output(stdout, ss);
     out->send(&msg);
     in->receive(&msg, this->id);
-    ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
-    Helper::output(stdout, ss);
+    //ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
+    //Helper::output(stdout, ss);
 
     for (int i = 0; i < CC_SIZE; i++)
     {

@@ -16,7 +16,8 @@
 #endif
 
 template <typename T>
-class Queue {
+class Queue
+{
 public:
 
     Queue<T>(std::string path, int identifier, std::string owner, bool exitOnFailure = true)

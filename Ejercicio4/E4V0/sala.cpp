@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     while (true)
     {
         s->esperarPersona();
-        // TODO que esperar persona devuelva el id de la persona que entro
+        // TODO esperarPersona podria devolvoer el id de la persona que entro
     }
     return 0;
 }

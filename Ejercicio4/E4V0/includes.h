@@ -31,26 +31,30 @@
 // Shared memory structures
 
 enum state {
-    WAITING, NOT_WAITING, WORKING
+    WAITING, WORKING, TRAVELLING
 };
 
 enum location {
     BOTTOM, TOP
 };
 
-struct cableCarril {
-    enum state estadoArriba;
-    enum state estadoAbajo;
-    enum state estadoCablecarril;
-    enum location ubicacionCablecarril;
-    long personasArriba[ROOM_SIZE];
-    unsigned int cantArriba;
-    unsigned int pReadArriba;
-    unsigned int pWriteArriba;
-    long personasAbajo[ROOM_SIZE];
-    unsigned int cantAbajo;
-    unsigned int pReadAbajo;
-    unsigned int pWriteAbajo;
+struct sala {
+    enum state estado;
+    long personas[ROOM_SIZE];
+    unsigned int pRead;
+    unsigned int pWrite;
+    unsigned int cantidad;
+};
+
+struct cablecarril {
+    enum state estado;
+    enum location ubicacion;
+};
+
+struct registro {
+    struct cablecarril cc;
+    struct sala arriba;
+    struct sala abajo;
 };
 
 // Messages

@@ -15,10 +15,12 @@ void Helper::output(FILE* file, std::string s)
     }
 }
 
-void Helper::doSleep( int min, int max ) {
-        sleep( min + rand( ) % (max - min + 1) );
+unsigned int Helper::doSleep(int min, int max)
+{
+    unsigned int time = min + rand() % (max - min + 1);
+    sleep(min + rand() % (max - min + 1));
+    return time;
 }
-
 
 std::string Helper::msgToString(enum iMessageType m)
 {
@@ -60,17 +62,17 @@ std::string Helper::msgToString(enum personMessageType m)
     switch (m)
     {
         case QUIERO_ENTRAR:
-            return "\033[1;33mQUIERO ENTRAR\033[0m";
+            return "\033[0;33mQUIERO ENTRAR\033[0m";
         case ENTRA:
             return "\033[1;33mENTRA\033[0m";
         case SUBIR:
             return "\033[1;35mSUBIR\033[0m";
         case SUBI:
-            return "\033[1;35mSUBI\033[0m";
+            return "\033[0;35mSUBI\033[0m";
         case BAJAR:
             return "\033[1;36mBAJAR\033[0m";
         case BAJE:
-            return "\033[1;36mBAJE\033[0m";
+            return "\033[0;36mBAJE\033[0m";
         default:
             std::stringstream ss;
             ss << m;

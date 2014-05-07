@@ -22,7 +22,8 @@ int main()
         // Aviso que terminaron de bajar todos para que comiencen a subir.
         cc->cargarPersonas(abajo, personas);
 
-        Helper::doSleep(conf.getInt("viaje min", 0), conf.getInt("viaje max", 0));
+        ss << "CableCarril viaje durante " << Helper::doSleep(conf.getInt("viaje min", 0), conf.getInt("viaje max", 0)) << " segundos" << std::endl;
+        Helper::output(stdout, ss);
 
         // Aviso que llegue arriba.
         cc->estoy(arriba, personas);

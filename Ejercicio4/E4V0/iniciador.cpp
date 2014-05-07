@@ -8,8 +8,8 @@ int main()
     SemaphoreArray * s;
     Queue<struct iMessage> * qi;
     Queue<struct personMessage> * qp;
-    SharedMemory<struct cableCarril> * shm;
-    struct cableCarril * cableCarril;
+    SharedMemory<struct registro> * shm;
+    struct registro * registro;
 
     qi = new Queue<struct iMessage>(PATH, Q_SALA_TO_INTERFACE, "iniciador");
     qi->create();
@@ -27,28 +27,30 @@ int main()
     qp->create();
     qp = new Queue<struct personMessage>(PATH, Q_CC, "iniciador");
     qp->create();
-    shm = new SharedMemory<struct cableCarril>(PATH, SHM_CC, "iniciador");
+    shm = new SharedMemory<struct registro>(PATH, SHM_CC, "iniciador");
     shm->create();
-    cableCarril = shm->attach();
-    cableCarril->cantAbajo = 0;
-    cableCarril->estadoArriba = WAITING;
-    cableCarril->estadoAbajo = WAITING;
-    cableCarril->estadoCablecarril = WAITING;
-    cableCarril->ubicacionCablecarril = BOTTOM;
+    registro = shm->attach();
+
+    registro->cc.estado = WAITING;
+    registro->cc.ubicacion = BOTTOM;
+
+    registro->abajo.estado = WAITING;
+    registro->abajo.cantidad = 0;
+    registro->abajo.pRead = 0;
+    registro->abajo.pWrite = 0;
     for (int i = 0; i < ROOM_SIZE; i++)
     {
-        cableCarril->personasArriba[i] = 0;
+        registro->abajo.personas[i] = 0;
     }
-    cableCarril->cantArriba = 0;
-    cableCarril->pReadArriba = 0;
-    cableCarril->pWriteArriba = 0;
+
+    registro->arriba.estado = WAITING;
+    registro->arriba.cantidad = 0;
+    registro->arriba.pRead = 0;
+    registro->arriba.pWrite = 0;
     for (int i = 0; i < ROOM_SIZE; i++)
     {
-        cableCarril->personasAbajo[i] = 0;
+        registro->arriba.personas[i] = 0;
     }
-    cableCarril->cantAbajo = 0;
-    cableCarril->pReadAbajo = 0;
-    cableCarril->pWriteAbajo = 0;
 
     s = new SemaphoreArray(PATH, SEM_MUTEX, 1, "iniciador");
     s->create();

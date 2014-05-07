@@ -8,7 +8,7 @@ int main()
     SemaphoreArray * s;
     Queue<struct iMessage> * qi;
     Queue<struct personMessage> * qp;
-    SharedMemory<struct cableCarril> * shm;
+    SharedMemory<struct registro> * shm;
 
     qi = new Queue<struct iMessage>(PATH, Q_SALA_FROM_INTERFACE, "terminador", false);
     qi->get();
@@ -34,7 +34,7 @@ int main()
     qp = new Queue<struct personMessage>(PATH, Q_CC, "terminador", false);
     qp->get();
     qp->remove();
-    shm = new SharedMemory<struct cableCarril>(PATH, SHM_CC, "terminador", false);
+    shm = new SharedMemory<struct registro>(PATH, SHM_CC, "terminador", false);
     shm->get();
     shm->remove();
     s = new SemaphoreArray(PATH, SEM_MUTEX, 1, "terminador", false);

@@ -36,6 +36,7 @@ int main(int argc, char** argv)
     cableCarril = new Queue<struct personMessage>(PATH, Q_CC, owner);
     cableCarril->get();
 
+    // Entrar a la sala de abajo
     msg.type = M_SALA_ABAJO;
     msg.sender = M_PERS + id;
     msg.message = QUIERO_ENTRAR;
@@ -47,10 +48,12 @@ int main(int argc, char** argv)
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
+    // Subir al cablecarril (abajo)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep(conf.getInt("subir cc min",1), conf.getInt("subir cc max",1));
+    ss << owner << " subi durante: " << Helper::doSleep(conf.getInt("subir cc min", 1), conf.getInt("subir cc max", 1)) << " segundos" << std::endl;
+    Helper::output(stdout, ss);
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -59,10 +62,12 @@ int main(int argc, char** argv)
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
+    // Bajar del cablecarril (arriba)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep(conf.getInt("bajar cc min",1), conf.getInt("bajar cc max",1));
+    ss << owner << " baje durante: " << Helper::doSleep(conf.getInt("bajar cc min", 1), conf.getInt("bajar cc max", 1)) << " segundos" << std::endl;
+    Helper::output(stdout, ss);
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -71,8 +76,11 @@ int main(int argc, char** argv)
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
-    Helper::doSleep(conf.getInt("paseo arriba min",1), conf.getInt("paseo arriba max",1));
+    // Pasear arriba
+    ss << owner << " pasee arriba por: " << Helper::doSleep(conf.getInt("paseo arriba min", 1), conf.getInt("paseo arriba max", 1)) << " segundos" << std::endl;
+    Helper::output(stdout, ss);
 
+    // Entrar a la sala de arriba
     msg.type = M_SALA_ARRIBA;
     msg.sender = M_PERS + id;
     msg.message = QUIERO_ENTRAR;
@@ -84,10 +92,12 @@ int main(int argc, char** argv)
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
+    // Subir al cablecarril (arriba)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep(conf.getInt("subir cc min",1), conf.getInt("subir cc max",1));
+    ss << owner << " subi durante: " << Helper::doSleep(conf.getInt("subir cc  min", 1), conf.getInt("subir cc max", 1)) << " segundos" << std::endl;
+    Helper::output(stdout, ss);
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -96,10 +106,12 @@ int main(int argc, char** argv)
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
+    // Bajar del cablecarril (abajo)
     in->receive(&msg, M_PERS + id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
-    Helper::doSleep(conf.getInt("bajar cc min",1), conf.getInt("bajar cc max",1));
+    ss << owner << " baje durante: " << Helper::doSleep(conf.getInt("bajar cc  min", 1), conf.getInt("bajar cc max", 1)) << " segundos" << std::endl;
+    Helper::output(stdout, ss);
 
     msg.type = msg.sender;
     msg.sender = M_PERS + id;
@@ -108,5 +120,6 @@ int main(int argc, char** argv)
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << endl;
     Helper::output(stdout, ss);
 
+    // Bye Bye
     return 0;
 }

@@ -12,7 +12,7 @@ public:
     static std::string msgToString(enum personMessageType);
     static void output(FILE*, std::stringstream&);
     static void output(FILE*, std::string);
-    static void doSleep( int min, int max );
+    static unsigned int doSleep( int min, int max );
 private:
 
 };
