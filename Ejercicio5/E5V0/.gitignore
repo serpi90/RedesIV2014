@@ -1,0 +1,11 @@
+nbproject
+comp-puerta
+comp-cablecarril
+puerta
+cablecarril
+persona
+lanzador
+terminador
+iniciador
+shmstat
+*.o
