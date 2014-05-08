@@ -11,8 +11,6 @@ public:
     CableCarril();
     void init();
     void llegar(enum location location, long personas[CC_SIZE]);
-    void cargarPersonasAbajo(long personas[CC_SIZE]);
-    void cargarPersonasArriba(long personas[CC_SIZE]);
     void cargarPersonas(enum location ubicacion, long personas[CC_SIZE]);
 private:
     Queue<struct iMessage> * in, * out;

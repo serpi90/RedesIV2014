@@ -50,5 +50,5 @@ $(IPC_SIN_HEADER): %.o: %.cpp
 # Limpieza
 
 clean:
-	rm -f $(IPC) $(OBJS) $(PROGS) Helper.o Config.o
+	rm -f $(IPC) $(OBJS) $(PROGS) Helper.o Config.o shmstat
 

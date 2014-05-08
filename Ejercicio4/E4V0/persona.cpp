@@ -48,13 +48,6 @@ int main(int argc, char** argv)
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
 
-//    msg.type = msg.sender;
-//    msg.sender = id;
-//    msg.message = ENTRE;
-//    salaAbajo->send(&msg);
-//    ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
-//    Helper::output(stdout, ss);
-
     // Subir al cablecarril (abajo)
     in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
@@ -100,13 +93,6 @@ int main(int argc, char** argv)
     in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
-
-//    msg.type = msg.sender;
-//    msg.sender = id;
-//    msg.message = ENTRE;
-//    salaArriba->send(&msg);
-//    ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
-//    Helper::output(stdout, ss);
 
     // Subir al cablecarril (arriba)
     in->receive(&msg, id);
