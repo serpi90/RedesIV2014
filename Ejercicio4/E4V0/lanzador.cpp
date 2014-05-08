@@ -14,7 +14,7 @@ int main(int argc, char * argv[] )
     int amount = atoi( argv[1] );
     std::string number;
     for( int i = 0 ; i < amount ; i++ ) {
-	ss << i;
+	ss << i + 1;
         number = ss.str( );
 	ss.str("");
         pid = fork();

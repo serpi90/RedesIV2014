@@ -7,11 +7,11 @@
 
 class iSala {
 public:
-    iSala(bool abajo);
+    iSala(enum location ubicacion);
     void esperarPersona();
 private:
     Queue<struct iMessage> * in, * out;
-    bool abajo;
+    enum location ubicacion;
     std::string owner;
 };
 

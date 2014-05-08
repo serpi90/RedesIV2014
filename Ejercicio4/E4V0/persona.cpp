@@ -9,7 +9,8 @@ int main(int argc, char** argv)
     Queue<struct personMessage> * in, * salaArriba, * salaAbajo, * cableCarril;
     std::stringstream ss;
     std::string owner;
-    int id;
+    int number;
+    long id;
     struct personMessage msg;
 
     if (argc < 2)
@@ -18,8 +19,9 @@ int main(int argc, char** argv)
         Helper::output(stderr, ss);
         exit(EXIT_FAILURE);
     }
-    id = atoi(argv[1]);
-    ss << "Persona " << id << " (" << (M_PERS + id) << ")";
+    number = atoi(argv[1]);
+    id = M_PERS + number;
+    ss << "Persona " << number << " (id: " << (id) << ")";
     owner = ss.str();
     ss.str("");
 
@@ -36,39 +38,46 @@ int main(int argc, char** argv)
 
     // Entrar a la sala de abajo
     msg.type = M_SALA_ABAJO;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = QUIERO_ENTRAR;
     salaAbajo->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
     Helper::output(stdout, ss);
 
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
 
+//    msg.type = msg.sender;
+//    msg.sender = id;
+//    msg.message = ENTRE;
+//    salaAbajo->send(&msg);
+//    ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
+//    Helper::output(stdout, ss);
+
     // Subir al cablecarril (abajo)
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
     ss << owner << " subi durante: " << Helper::doSleep(conf.getInt("subir cc min", 1), conf.getInt("subir cc max", 1)) << " segundos" << std::endl;
     Helper::output(stdout, ss);
 
     msg.type = msg.sender;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = SUBI;
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
     Helper::output(stdout, ss);
 
     // Bajar del cablecarril (arriba)
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
     ss << owner << " baje durante: " << Helper::doSleep(conf.getInt("bajar cc min", 1), conf.getInt("bajar cc max", 1)) << " segundos" << std::endl;
     Helper::output(stdout, ss);
 
     msg.type = msg.sender;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = BAJE;
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
@@ -82,39 +91,46 @@ int main(int argc, char** argv)
 
     // Entrar a la sala de arriba
     msg.type = M_SALA_ARRIBA;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = QUIERO_ENTRAR;
     salaArriba->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
     Helper::output(stdout, ss);
 
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
 
+//    msg.type = msg.sender;
+//    msg.sender = id;
+//    msg.message = ENTRE;
+//    salaArriba->send(&msg);
+//    ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
+//    Helper::output(stdout, ss);
+
     // Subir al cablecarril (arriba)
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
     ss << owner << " subi durante: " << Helper::doSleep(conf.getInt("subir cc  min", 1), conf.getInt("subir cc max", 1)) << " segundos" << std::endl;
     Helper::output(stdout, ss);
 
     msg.type = msg.sender;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = SUBI;
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;
     Helper::output(stdout, ss);
 
     // Bajar del cablecarril (abajo)
-    in->receive(&msg, M_PERS + id);
+    in->receive(&msg, id);
     ss << owner << " Recibi " << Helper::msgToString(msg.message) << " (" << msg.sender << ")" << std::endl;
     Helper::output(stdout, ss);
     ss << owner << " baje durante: " << Helper::doSleep(conf.getInt("bajar cc min", 1), conf.getInt("bajar cc max", 1)) << " segundos" << std::endl;
     Helper::output(stdout, ss);
 
     msg.type = msg.sender;
-    msg.sender = M_PERS + id;
+    msg.sender = id;
     msg.message = BAJE;
     cableCarril->send(&msg);
     ss << owner << " Enviando " << Helper::msgToString(msg.message) << " (" << msg.type << ")" << std::endl;

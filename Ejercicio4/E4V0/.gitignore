@@ -7,4 +7,5 @@ persona
 lanzador
 terminador
 iniciador
+shmstat
 *.o

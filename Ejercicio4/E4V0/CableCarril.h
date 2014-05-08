@@ -10,7 +10,7 @@ class CableCarril {
 public:
     CableCarril();
     void init();
-    void estoy(enum location location, long personas[CC_SIZE]);
+    void llegar(enum location location, long personas[CC_SIZE]);
     void cargarPersonasAbajo(long personas[CC_SIZE]);
     void cargarPersonasArriba(long personas[CC_SIZE]);
     void cargarPersonas(enum location ubicacion, long personas[CC_SIZE]);

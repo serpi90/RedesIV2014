@@ -1,7 +1,6 @@
 #include "Sala.h"
 
-Sala::Sala()
-{
+Sala::Sala() {
     owner = "Sala";
     in = new Queue<struct iMessage>(PATH, Q_SALA_FROM_INTERFACE, owner);
     in->get();
@@ -24,31 +23,27 @@ Sala::Sala()
     vacia->get();
 }
 
-void Sala::init()
-{
+void Sala::init() {
     std::stringstream ss;
     struct iMessage msg;
     pid_t pid;
-    while (true)
-    {
+    while (true) {
         in->receive(&msg, 0);
         pid = fork();
-        if (pid == 0)
-        {
+        if (pid == 0) {
             ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
             Helper::output(stdout, ss);
-            switch (msg.message)
-            {
+            switch (msg.message) {
                 case ESPERAR_PERSONA_ABAJO:
                     msg.type = msg.sender;
                     msg.sender = M_SALA_ABAJO;
-                    msg.message = ESPERAR_PERSONA_ABAJO_OK;
+                    msg.message = ENTRO_PERSONA_ABAJO;
                     esperarPersona(BOTTOM);
                     break;
                 case ESPERAR_PERSONA_ARRIBA:
                     msg.type = msg.sender;
                     msg.sender = M_SALA_ARRIBA;
-                    msg.message = ESPERAR_PERSONA_ARRIBA_OK;
+                    msg.message = ENTRO_PERSONA_ARRIBA;
                     esperarPersona(TOP);
                     break;
                 default:
@@ -60,63 +55,56 @@ void Sala::init()
             ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
             Helper::output(stdout, ss);
             exit(EXIT_SUCCESS);
-        } else if (pid < 0)
-        {
+        } else if (pid < 0) {
             perror("Sala: fork");
         }
     }
 }
 
-void Sala::esperarPersona(enum location location)
-{
+void Sala::esperarPersona(enum location ubicacion) {
     std::stringstream ss;
     struct personMessage msg;
-    Semaphore * semLlena;
-    Queue<struct personMessage> * q;
-    std::string nombreSala;
+    Semaphore * llena;
+    Queue<struct personMessage> * myQueue;
     long myId;
     struct sala * sala;
-    if (location == BOTTOM)
-    {
-        nombreSala = "abajo";
+    std::string owner = this->owner + " de " + Helper::msgToString(ubicacion);
+    if (ubicacion == BOTTOM) {
         sala = &registro->abajo;
-        q = salaAbajo;
+        myQueue = salaAbajo;
         myId = M_SALA_ABAJO;
-        semLlena = new Semaphore(llena, 0);
-    } else
-    {
-        nombreSala = "arriba";
+        llena = new Semaphore(this->llena, 0);
+    } else {
         sala = &registro->arriba;
-        q = salaArriba;
+        myQueue = salaArriba;
         myId = M_SALA_ARRIBA;
-        semLlena = new Semaphore(llena, 1);
+        llena = new Semaphore(this->llena, 1);
     }
     // Esperar a que alguien quiera entrar
-    ss << owner << " esperando persona" << std::endl;
+    ss << owner << " esperando persona " << std::endl;
     Helper::output(stdout, ss);
-    q->receive(&msg, myId);
+    myQueue->receive(&msg, myId);
     ss << owner << " recibi: " << Helper::msgToString(msg.message) << " de " << (msg.sender) << std::endl;
     Helper::output(stdout, ss);
-    if (msg.message != QUIERO_ENTRAR)
-    {
+    if (msg.message != QUIERO_ENTRAR) {
         ss << owner << " \033[41m\033[30mError\33[0m mensaje incorrecto" << Helper::msgToString(msg.message);
         Helper::output(stderr, ss);
         exit(EXIT_FAILURE);
     }
     // Esperar a que haya lugar en la sala
     mutex->wait();
-    if (sala->cantidad == ROOM_SIZE)
-    {
-        ss << owner << " sala de " << nombreSala << " llena" << std::endl;
+    if (sala->cantidad == ROOM_SIZE) {
+        ss << owner << " llena" << std::endl;
         Helper::output(stdout, ss);
         sala->estado = WAITING;
         mutex->post();
-        semLlena->wait();
+        llena->wait();
         mutex->wait();
         sala->estado = WORKING;
     }
     mutex->post();
     // Avisar a la persona que puede entrar
+    long idPersona = msg.sender;
     msg.type = msg.sender;
     msg.sender = myId;
     msg.message = ENTRA;
@@ -125,14 +113,17 @@ void Sala::esperarPersona(enum location location)
     persona->send(&msg);
     mutex->wait();
     // Guardar los datos de la persona
-    sala->personas[sala->pWrite] = msg.type;
+    sala->personas[sala->pWrite] = idPersona;
     sala->pWrite++;
+    if (sala->pWrite == ROOM_SIZE) {
+        sala->pWrite = 0;
+    }
     sala->cantidad++;
     // Avisar al cablecarril si estaba esperando
-    if (sala->cantidad == 1 && registro->cc.estado == WAITING)
-    {
-        ss << owner << " de " << nombreSala << " estaba vacia despertando al cablecarril" << std::endl;
+    if (sala->cantidad == 1 && registro->cc.estado == WAITING) {
+        ss << owner << " estaba vacia despertando al cablecarril" << std::endl;
         Helper::output(stdout, ss);
+        registro->cc.estado = WORKING;
         vacia->post();
     }
     mutex->post();

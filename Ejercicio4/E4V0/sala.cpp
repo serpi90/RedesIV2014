@@ -18,9 +18,9 @@ int main(int argc, char** argv)
         Helper::output(stderr, ss);
         exit(EXIT_FAILURE);
     }
-    iSala * s = new iSala(arg == "-abajo");
+    iSala * s = new iSala(arg == "-abajo" ? BOTTOM : TOP);
 
-    Config conf( "sala.conf" );
+    Config conf("sala.conf");
 
     while (true)
     {
