@@ -1,0 +1,8 @@
+nbproject
+terminador
+iniciador
+*.o
+comp-analyzer
+comp-sampler
+analyzer
+sampler
