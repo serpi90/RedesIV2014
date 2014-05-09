@@ -9,25 +9,27 @@ COMPONENTES = comp-puerta comp-cablecarril
 PROGRAMAS = puerta cablecarril persona
 LANZADORES = iniciador lanzador terminador
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
+
 IPC_CON_HEADER = Semaphore.o SemaphoreArray.o
 IPC_SIN_HEADER = Queue.o SharedMemory.o
 IPC = $(IPC_CON_HEADER) $(IPC_SIN_HEADER)
+
 INTERFACES =  iCableCarril.o iPuerta.o
 MODELO = CableCarril.o Puerta.o
 ACCESORIOS = Helper.o Config.o
-OBJS = $(INTERFACES) $(MODELO) $(ACCESORIOS)
+OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
-all: $(IPC) $(OBJS) $(PROGS) shmstat
+all: $(OBJS) $(PROGS) shmstat
 
 # Ejecutables
 
 shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o
 
-$(PROGRAMAS): %: %.cpp $(INTERFACES) Queue.o Helper.o Config.o includes.h
+$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Helper.o Config.o
 
-$(COMPONENTES): %: %.cpp $(MODELO) $(IPC) Helper.o includes.h
+$(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o 
 
 $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
@@ -47,8 +49,18 @@ $(IPC_CON_HEADER) $(ACCESORIOS): %.o: %.cpp %.h
 $(IPC_SIN_HEADER): %.o: %.cpp
 	$(C++) -c -o $@ $< $(CFLAGS)
 
+# Dependencias especificas
+
+Semaphore.o: SemaphoreArray.h
+
+puerta: iPuerta.o
+cablecarril: iCableCarril.o
+
+comp-puerta: Puerta.o
+comp-cablecarril: CableCarril.o
+
 # Limpieza
 
 clean:
-	rm -f $(IPC) $(OBJS) $(PROGS) Helper.o Config.o shmstat
+	rm -f *.o $(PROGS) shmstat
 
