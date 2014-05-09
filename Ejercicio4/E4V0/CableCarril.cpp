@@ -156,7 +156,7 @@ void CableCarril::cargarPersonas(enum location ubicacion, long personas[CC_SIZE]
             ss << owner << " subieron " << pasajeros << std::endl;
             Helper::output(stdout, ss);
         } else {
-            ss << owner << "\033[41m\033[30mError\33[0m mensaje incorrecto: " << Helper::msgToString(msg.message) << " esperaba: " << Helper::msgToString(BAJE) << std::endl;
+            ss << owner << "\033[41m\033[30mError\33[0m mensaje incorrecto: " << Helper::msgToString(msg.message) << " esperaba: " << Helper::msgToString(SUBI) << std::endl;
             Helper::output(stderr, ss);
         }
         mutex->wait();
