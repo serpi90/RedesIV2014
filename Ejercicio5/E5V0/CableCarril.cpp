@@ -134,6 +134,7 @@ void CableCarril::cargarPersonas(enum location ubicacion, long numero, long pers
         llena = this->llenaAbajo;
         sala = &registro->arriba;
     }
+    sleep(20);
     mutex->wait();
     // Esperar si no hay nadie en ambas salas.
     if (registro->abajo.cantidad == 0 && registro->arriba.cantidad == 0)

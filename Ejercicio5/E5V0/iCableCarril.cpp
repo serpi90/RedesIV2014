@@ -20,6 +20,7 @@ void iCableCarril::estoy(enum location ubicacion, long personas[CC_SIZE])
     struct iMessage msg;
     msg.type = id;
     msg.sender = id;
+    msg.number = this->number;
     msg.message = ubicacion == ABAJO ? ESTOY_ABAJO : ESTOY_ARRIBA;
     for (i = 0; personas[i] != 0 && i < CC_SIZE; i++)
     {

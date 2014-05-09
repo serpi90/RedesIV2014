@@ -127,6 +127,7 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
     ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << (msg.type - M_PERS) << " (" << (msg.type) << ")" << std::endl;
     Helper::output(stdout, ss);
     persona->send(&msg);
+    Helper::output(stdout,"cc esperar wait 2\n");
     mutex->wait();
     // Guardar los datos de la persona
     sala->personas[sala->pWrite] = idPersona;
