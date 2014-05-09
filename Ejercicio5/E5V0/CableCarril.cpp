@@ -156,11 +156,7 @@ void CableCarril::cargarPersonas(enum location ubicacion, long numero, long pers
     {
         // Sacar una persona de la sala
         personas[pasajeros] = sala->personas[sala->pRead];
-        sala->pRead++;
-        if (sala->pRead >= ROOM_SIZE)
-        {
-            sala->pRead = 0;
-        }
+        sala->pRead = (sala->pRead + 1) % ROOM_SIZE;
         sala->cantidad--;
         // Si la sala estaba llena, avisar a la sala que puede seguir ingresando personas
         // TODO solo despertamos a la primera disponible, podria hacerse un round robin en este lugar

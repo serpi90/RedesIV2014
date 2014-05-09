@@ -142,11 +142,7 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
     mutex->wait();
     // Guardar los datos de la persona
     sala->personas[sala->pWrite] = idPersona;
-    sala->pWrite++;
-    if (sala->pWrite >= ROOM_SIZE)
-    {
-        sala->pWrite = 0;
-    }
+    sala->pWrite = (sala->pWrite + 1 ) % ROOM_SIZE;
     sala->cantidad++;
     // Avisar al cablecarril si estaba esperando
     if (sala->cantidad == 1)
