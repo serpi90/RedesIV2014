@@ -84,9 +84,9 @@ std::string Helper::msgToString(enum state s)
 {
     switch (s)
     {
-        case WAITING: return "WAITING";
-        case WORKING: return "WORKING";
-        case TRAVELLING: return "TRAVELLING";
+        case WAITING: return "\033[31mWAITING\033[0m";
+        case WORKING: return "\033[32mWORKING\033[0m";
+        case TRAVELLING: return "\033[33mTRAVELLING\033[0m";
         default:
             std::stringstream ss;
             ss << s;

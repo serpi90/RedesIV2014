@@ -18,6 +18,8 @@ private:
     Queue<struct personMessage>* persona, * salaAbajo, * salaArriba;
     SharedMemory<struct registro> * shm;
     Semaphore * mutex;
+    Semaphore * abajo;
+    Semaphore * arriba;
     SemaphoreArray * llenaAbajo;
     SemaphoreArray * llenaArriba;
     SemaphoreArray * vacia;

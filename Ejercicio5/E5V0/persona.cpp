@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     int number = atoi(argv[1]);
     long id = M_PERS + number;
     srand(time(NULL) + number);
-    long puertaEntrada = M_PUERTA_ABAJO + rand() % ROOM_AMOUNT;
-    long puertaSalida = M_PUERTA_ARRIBA + rand() % ROOM_AMOUNT;
+    long puertaEntrada = M_PUERTA_ABAJO + rand() % DOOR_AMOUNT;
+    long puertaSalida = M_PUERTA_ARRIBA + rand() % DOOR_AMOUNT;
     ss << "Persona " << number << " (id: " << (id) << ")";
     owner = ss.str();
     ss.str("");

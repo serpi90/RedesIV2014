@@ -40,10 +40,16 @@ int main()
     s = new SemaphoreArray(PATH, SEM_MUTEX, 1, "terminador", false);
     s->get();
     s->remove();
-    s = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, ROOM_AMOUNT, "terminador", false);
+    s = new SemaphoreArray(PATH, SEM_ABAJO, 1, "terminador", false);
     s->get();
     s->remove();
-    s = new SemaphoreArray(PATH, SEM_FULL_TOP, ROOM_AMOUNT, "terminador", false);
+    s = new SemaphoreArray(PATH, SEM_ARRIBA, 1, "terminador", false);
+    s->get();
+    s->remove();
+    s = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, DOOR_AMOUNT, "terminador", false);
+    s->get();
+    s->remove();
+    s = new SemaphoreArray(PATH, SEM_FULL_TOP, DOOR_AMOUNT, "terminador", false);
     s->get();
     s->remove();
     s = new SemaphoreArray(PATH, SEM_EMPTY, CC_AMOUNT, "terminador", false);

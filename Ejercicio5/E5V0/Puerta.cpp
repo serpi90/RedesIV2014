@@ -18,9 +18,13 @@ Puerta::Puerta()
     registro = shm->attach();
     mutex = new Semaphore(PATH, SEM_MUTEX, owner);
     mutex->get();
-    llenaAbajo = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, ROOM_AMOUNT, owner);
+    abajo = new Semaphore(PATH, SEM_ABAJO, owner);
+    abajo->get();
+    arriba = new Semaphore(PATH, SEM_ARRIBA, owner);
+    arriba->get();
+    llenaAbajo = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, DOOR_AMOUNT, owner);
     llenaAbajo->get();
-    llenaArriba = new SemaphoreArray(PATH, SEM_FULL_TOP, ROOM_AMOUNT, owner);
+    llenaArriba = new SemaphoreArray(PATH, SEM_FULL_TOP, DOOR_AMOUNT, owner);
     llenaArriba->get();
     vacia = new SemaphoreArray(PATH, SEM_EMPTY, CC_AMOUNT, owner);
     vacia->get();
@@ -78,20 +82,23 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
     Queue<struct personMessage> * myQueue;
     long myId;
     struct sala * sala;
+    Semaphore * espera;
     if (ubicacion == ABAJO)
     {
+        espera = abajo;
         sala = &registro->abajo;
         myQueue = salaAbajo;
         myId = M_PUERTA_ABAJO + numero;
         llena = new Semaphore(this->llenaAbajo, numero);
     } else
     {
+        espera = arriba;
         sala = &registro->arriba;
         myQueue = salaArriba;
         myId = M_PUERTA_ARRIBA + numero;
         llena = new Semaphore(this->llenaArriba, numero);
     }
-    ss << this->owner << " " << numero << " de " << Helper::msgToString(ubicacion) << " (" << myId <<")";
+    ss << this->owner << " " << numero << " de " << Helper::msgToString(ubicacion) << " (" << myId << ")";
     std::string owner = ss.str();
     ss.str("");
     // Esperar a que alguien quiera entrar
@@ -106,11 +113,16 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
         Helper::output(stderr, ss);
         exit(EXIT_FAILURE);
     }
-    // Esperar a que haya lugar en la sala
+    
+    espera->wait();
+    // O pongo esto dentro de la seccion critica,
+    // o tengo que asegurarme de que haya solamente sola puerta haciendo esto a la vez.
+    // Para esto uso el semaforo de espera. ingresan todas una persona cuando queda un espacio, y superan la capacidad.
     mutex->wait();
+    // Esperar a que haya lugar en la sala
     if (sala->cantidad == ROOM_SIZE)
     {
-        ss << owner << " llena" << std::endl;
+        ss << "\033[1;39m" << owner << " llena\033[0m" << std::endl;
         Helper::output(stdout, ss);
         sala->estadoPuerta[numero] = WAITING;
         mutex->post();
@@ -127,12 +139,11 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
     ss << owner << " enviando " << Helper::msgToString(msg.message) << " a " << (msg.type - M_PERS) << " (" << (msg.type) << ")" << std::endl;
     Helper::output(stdout, ss);
     persona->send(&msg);
-    Helper::output(stdout,"cc esperar wait 2\n");
     mutex->wait();
     // Guardar los datos de la persona
     sala->personas[sala->pWrite] = idPersona;
     sala->pWrite++;
-    if (sala->pWrite == ROOM_SIZE)
+    if (sala->pWrite >= ROOM_SIZE)
     {
         sala->pWrite = 0;
     }
@@ -142,7 +153,7 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
     {
         for (int i = 0; i < CC_AMOUNT; i++)
         {
-            if (registro->cc[numero].estado == WAITING)
+            if (registro->cc[i].estado == WAITING)
             {
                 ss << owner << " estaba vacia despertando al cablecarril " << i << std::endl;
                 Helper::output(stdout, ss);
@@ -152,4 +163,5 @@ void Puerta::esperarPersona(enum location ubicacion, long numero)
         }
     }
     mutex->post();
+    espera->post();
 }

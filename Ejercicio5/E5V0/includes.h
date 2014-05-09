@@ -4,9 +4,9 @@
 // Definitions
 
 #define CC_SIZE 50
-#define CC_AMOUNT 2
+#define CC_AMOUNT 3
 #define ROOM_SIZE 25
-#define ROOM_AMOUNT 2
+#define DOOR_AMOUNT 5
 
 // IPC Definitions
 
@@ -20,15 +20,17 @@
 #define Q_SALA_ARRIBA (Q_SALA_ABAJO + 1)
 #define Q_CC (Q_SALA_ARRIBA + 1)
 #define SEM_MUTEX (Q_CC + 1)
-#define SEM_FULL_BOTTOM (SEM_MUTEX + 1)
+#define SEM_ABAJO (SEM_MUTEX + 1)
+#define SEM_ARRIBA (SEM_ABAJO + 1)
+#define SEM_FULL_BOTTOM (SEM_ARRIBA + 1)
 #define SEM_FULL_TOP (SEM_FULL_BOTTOM + 1)
 #define SEM_EMPTY (SEM_FULL_TOP + 1)
 #define SHM_CC_SALAS (SEM_EMPTY + 1)
 // Message Types
 
 #define M_PUERTA_ABAJO 1
-#define M_PUERTA_ARRIBA (M_PUERTA_ABAJO + 1 + ROOM_AMOUNT)
-#define M_CABLE_CARRIL (M_PUERTA_ARRIBA + 1 + ROOM_AMOUNT)
+#define M_PUERTA_ARRIBA (M_PUERTA_ABAJO + 1 + DOOR_AMOUNT)
+#define M_CABLE_CARRIL (M_PUERTA_ARRIBA + 1 + DOOR_AMOUNT)
 #define M_PERS (M_CABLE_CARRIL + 1 + CC_AMOUNT)
 
 // Shared memory structures
@@ -42,8 +44,8 @@ enum location {
 };
 
 struct sala {
-    enum state estadoPuerta[ROOM_AMOUNT];
-    long personas[ROOM_AMOUNT];
+    enum state estadoPuerta[DOOR_AMOUNT];
+    long personas[ROOM_SIZE];
     unsigned int pRead;
     unsigned int pWrite;
     unsigned int cantidad;
@@ -52,6 +54,7 @@ struct sala {
 struct cablecarril {
     enum state estado;
     enum location ubicacion;
+    unsigned int cantidad;
 };
 
 struct registro {

@@ -40,7 +40,7 @@ int main()
     registro->abajo.cantidad = 0;
     registro->abajo.pRead = 0;
     registro->abajo.pWrite = 0;
-    for (int i = 0; i < ROOM_AMOUNT; i++)
+    for (int i = 0; i < DOOR_AMOUNT; i++)
     {
         registro->abajo.estadoPuerta[i] = WORKING;
     }
@@ -52,7 +52,7 @@ int main()
     registro->arriba.cantidad = 0;
     registro->arriba.pRead = 0;
     registro->arriba.pWrite = 0;
-    for (int i = 0; i < ROOM_AMOUNT; i++)
+    for (int i = 0; i < DOOR_AMOUNT; i++)
     {
         registro->arriba.estadoPuerta[i] = WORKING;
     }
@@ -64,9 +64,15 @@ int main()
     s = new SemaphoreArray(PATH, SEM_MUTEX, 1, "iniciador");
     s->create();
     s->post(0);
-    s = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, ROOM_AMOUNT, "iniciador");
+    s = new SemaphoreArray(PATH, SEM_ABAJO, 1, "iniciador");
     s->create();
-    s = new SemaphoreArray(PATH, SEM_FULL_TOP, ROOM_AMOUNT, "iniciador");
+    s->post(0);
+    s = new SemaphoreArray(PATH, SEM_ARRIBA, 1, "iniciador");
+    s->create();
+    s->post(0);
+    s = new SemaphoreArray(PATH, SEM_FULL_BOTTOM, DOOR_AMOUNT, "iniciador");
+    s->create();
+    s = new SemaphoreArray(PATH, SEM_FULL_TOP, DOOR_AMOUNT, "iniciador");
     s->create();
     s = new SemaphoreArray(PATH, SEM_EMPTY, CC_AMOUNT, "iniciador");
     s->create();
@@ -95,7 +101,7 @@ int main()
         perror("Componente CableCarril - fork: ");
     }
 
-    for (int i = 0; i < ROOM_AMOUNT; i++)
+    for (int i = 0; i < DOOR_AMOUNT; i++)
     {
         std::stringstream ss;
         ss << i;

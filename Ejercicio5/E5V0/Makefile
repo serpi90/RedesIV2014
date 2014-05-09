@@ -1,5 +1,5 @@
 C++ = g++
-DFLAGS = -Wall -Wextra -ansi -pedantic-errors -g
+DFLAGS = -Wall -Wextra -ansi -pedantic-errors
 # -g
 #OFLAGS = -O3
 #LFLAGS = -lpthread

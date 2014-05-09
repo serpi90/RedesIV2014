@@ -19,7 +19,7 @@ private:
     Semaphore * mutex;
     SemaphoreArray * llenaAbajo;
     SemaphoreArray * llenaArriba;
-    SemaphoreArray * vacia;
+    SemaphoreArray * salasVacias;
     std::string owner;
     struct registro * registro;
 };
