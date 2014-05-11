@@ -32,13 +32,14 @@ int main()
         sampleHolder->samples[h].id = 0;
         for (unsigned a = 0; a < ANALYZER_AMOUNT; a++)
         {
-            sampleHolder->status[h][a] = NOT_ANALYZED;
+            sampleHolder->status[h][a] = ANALYZED;
         }
     }
     for (unsigned a = 0; a < ANALYZER_AMOUNT; a++)
     {
         sampleHolder->analyzerStatus[a] = WORKING;
     }
+    sampleHolder->waitingSamplers = 0;
 
     // Create and initialize the semaphores
     SemaphoreArray * s;
@@ -71,36 +72,5 @@ int main()
     } else if (pid < 0)
     {
         perror("Analyzer Component - fork: ");
-    }
-
-    for (int i = 0; i < SAMPLER_AMOUNT; i++)
-    {
-        std::stringstream ss;
-        ss << i;
-        pid = fork();
-        if (pid == 0)
-        {
-            execlp("./sampler", "sampler", ss.str().c_str(), NULL);
-            perror("Sampler - execlp: ");
-            exit(EXIT_FAILURE);
-        } else if (pid < 0)
-        {
-            perror("Sampler - fork: ");
-        }
-    }
-    for (int i = 0; i < ANALYZER_AMOUNT; i++)
-    {
-        std::stringstream ss;
-        ss << i;
-        pid = fork();
-        if (pid == 0)
-        {
-            execlp("./analyzer", "analyzer", ss.str().c_str(), NULL);
-            perror("Analyzer - execlp: ");
-            exit(EXIT_FAILURE);
-        } else if (pid < 0)
-        {
-            perror("Analyzer - fork: ");
-        }
     }
 }

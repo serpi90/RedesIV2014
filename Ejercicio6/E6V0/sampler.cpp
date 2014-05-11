@@ -24,9 +24,9 @@ int main(int argc, char* argv[])
     {
         sample.id += SAMPLER_AMOUNT;
         s->placeSample(sample);
-        ss << "Sampler placed sample: " << sample.id << std::endl;
+        ss << "\033[1;36mSampler placed sample: \033[0m" << sample.id << std::endl;
         Helper::output(stdout, ss);
-        ss << "Sampler simule trabajar durante " << Helper::doSleep(conf.getInt("sampler sleep min", 1), conf.getInt("sampler sleep max", 5)) << " segundos" << std::endl;
+        ss << "Sampler fake worked during: " << Helper::doSleep(conf.getInt("sampler sleep min", 1), conf.getInt("sampler sleep max", 5)) << " segundos" << std::endl;
     }
     return 0;
 }

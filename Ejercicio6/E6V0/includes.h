@@ -3,8 +3,11 @@
 
 // Definitions
 
+// 6
 #define HOLDER_CAPACITY 6
+// 6
 #define SAMPLER_AMOUNT 6
+// 8
 #define ANALYZER_AMOUNT 8
 
 // IPC Definitions
@@ -40,11 +43,12 @@ struct sample {
 
 struct sampleHolder {
     struct sample samples[HOLDER_CAPACITY];
-    unsigned int read;
-    unsigned int write;
-    unsigned int amount;
+    unsigned read;
+    unsigned write;
+    unsigned amount;
     enum analyisisStatus status[HOLDER_CAPACITY][ANALYZER_AMOUNT];
     enum workingStatus analyzerStatus[ANALYZER_AMOUNT];
+    unsigned waitingSamplers;
 };
 
 // Messages

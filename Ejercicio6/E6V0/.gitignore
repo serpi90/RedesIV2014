@@ -1,6 +1,8 @@
 nbproject
 terminador
 iniciador
+lanzador
+shmstat
 *.o
 comp-analyzer
 comp-sampler

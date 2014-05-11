@@ -1,6 +1,7 @@
 #ifndef Helper_H
 #define	Helper_H
 #include "includes.h"
+#include <string>
 #include <cstdlib>
 #include <ctime>
 

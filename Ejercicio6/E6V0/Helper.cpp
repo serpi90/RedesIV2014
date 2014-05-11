@@ -27,13 +27,13 @@ std::string Helper::msgToString(enum iMessageType m)
     switch (m)
     {
         case PLACE_SAMPLE:
-            return "\033[1;34miPLACE SAMPLE\033[0m";
+            return "\033[1;35miPLACE SAMPLE\033[0m";
         case SAMPLE_PLACED:
-            return "\033[34miSAMPLE PLACED\033[0m";
+            return "\033[35miSAMPLE PLACED\033[0m";
         case GET_SAMPLE:
-            return "\033[1;32miGET SAMPLE\033[0m";
+            return "\033[1;33miGET SAMPLE\033[0m";
         case GOT_SAMPLE:
-            return "\033[32miGOT SAMPLE\033[0m";
+            return "\033[33miGOT SAMPLE\033[0m";
         default:
             std::stringstream ss;
             ss << m;

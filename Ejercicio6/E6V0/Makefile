@@ -5,9 +5,9 @@ DFLAGS = -Wall -Wextra -ansi -pedantic-errors
 #LFLAGS = -lpthread
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
-COMPONENTES = comp-sampler comp-analyzer 
+COMPONENTES = comp-sampler comp-analyzer shmstat
 PROGRAMAS = sampler analyzer
-LANZADORES = iniciador terminador
+LANZADORES = iniciador terminador lanzador
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
 
 IPC_CON_HEADER = Semaphore.o SemaphoreArray.o

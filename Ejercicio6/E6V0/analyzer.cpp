@@ -23,9 +23,9 @@ int main(int argc, char* argv[])
     while (true)
     {
         sample = a->getSample();
-        ss << "Analyzer got sample: " << sample.id << std::endl;
+        ss << "\033[1;37mAnalyzer got sample: \033[0m" << sample.id << std::endl;
         Helper::output(stdout, ss);
-        ss << "Analyzer simule trabajar durante " << Helper::doSleep(conf.getInt("analyzer sleep min", 1), conf.getInt("analyzer sleep max", 5)) << " segundos" << std::endl;
+        ss << "Analyzer fake worked during: " << Helper::doSleep(conf.getInt("analyzer sleep min", 1), conf.getInt("analyzer sleep max", 5)) << " segundos" << std::endl;
     }
     return 0;
 }

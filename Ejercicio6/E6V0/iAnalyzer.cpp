@@ -6,9 +6,9 @@
 iAnalyzer::iAnalyzer(long number)
 {
     std::stringstream ss;
-    ss << "iAnalyzer " << number;
-    this->owner = ss.str();
     this->id = M_ANALYZER + number;
+    ss << "iAnalyzer " << number << " (" << this->id << ")";
+    this->owner = ss.str();
     this->number = number;
     in = new Queue<struct iMessage>(PATH, Q_ANALYZER_TO_INTERFACE, owner);
     in->get();
@@ -26,10 +26,10 @@ struct sample iAnalyzer::getSample(void)
     msg.data.number = this->number;
 
     out->send(msg);
-    ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
+//    ss << owner << " envie " << Helper::msgToString(msg.message) << std::endl;
     Helper::output(stdout, ss);
     msg = in->receive(this->id);
-    ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
+//    ss << owner << " recibi " << Helper::msgToString(msg.message) << std::endl;
     Helper::output(stdout, ss);
     if (msg.message != GOT_SAMPLE)
     {

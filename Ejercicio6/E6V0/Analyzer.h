@@ -14,7 +14,8 @@ public:
 private:
     std::string owner;
     Queue<struct iMessage> * in, * out;
-    Semaphore * mutex, * full;
+    Semaphore * mutex;
+    Semaphore * full;
     SemaphoreArray * empty;
     SharedMemory<struct sampleHolder> * shm;
     struct sampleHolder * sampleHolder;

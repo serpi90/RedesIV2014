@@ -4,7 +4,7 @@
 
 Analyzer::Analyzer()
 {
-    this->owner = "Analyzer";
+    this->owner = "Analyzer component";
     in = new Queue<struct iMessage>(PATH, Q_ANALYZER_FROM_INTERFACE, owner);
     in->get();
     out = new Queue<struct iMessage>(PATH, Q_ANALYZER_TO_INTERFACE, owner);
@@ -25,16 +25,15 @@ void Analyzer::init(void)
     std::stringstream ss;
     struct iMessage msg;
     pid_t pid;
-    std::string owner = "Componente " + this->owner;
     while (true)
     {
         msg = in->receive(M_ANALYZER);
-        ss << owner << " recibi " << msg.message << " de " << (msg.sender - M_ANALYZER) << " (" << msg.sender << ")" << std::endl;
+        ss << owner << " got " << Helper::msgToString(msg.message) << " from " << (msg.sender - M_ANALYZER) << " (" << msg.sender << ")" << std::endl;
         Helper::output(stdout, ss);
         pid = fork();
         if (pid < 0)
         {
-            perror("Componente Analyzer: fork");
+            perror("Analyzer component: fork");
         } else if (pid == 0)
         {
             switch (msg.message)
@@ -44,14 +43,14 @@ void Analyzer::init(void)
                     msg.data.sample = getSample(msg.data.number);
                     break;
                 default:
-                    ss << owner << " \033[41m\033[30mError\33[0m mensaje incorrecto" << Helper::msgToString(msg.message) << std::endl;
+                    ss << owner << " \033[41m\033[30mError\33[0m got wrong message " << Helper::msgToString(msg.message) << std::endl;
                     Helper::output(stderr, ss);
                     exit(EXIT_FAILURE);
             }
             msg.type = msg.sender;
             msg.sender = M_ANALYZER;
             out->send(msg);
-            ss << owner << " envie " << Helper::msgToString(msg.message) << " a " << (msg.type - M_ANALYZER) << " (" << msg.type << ")" << std::endl;
+            ss << owner << " sent " << Helper::msgToString(msg.message) << " to " << (msg.type - M_ANALYZER) << " (" << msg.type << ")" << std::endl;
             Helper::output(stderr, ss);
 
             exit(EXIT_SUCCESS);
@@ -61,6 +60,7 @@ void Analyzer::init(void)
 
 struct sample Analyzer::getSample(long number)
 {
+    struct sample sample;
     std::stringstream ss;
     ss << owner << " " << number;
     std::string owner = ss.str();
@@ -68,21 +68,53 @@ struct sample Analyzer::getSample(long number)
     Semaphore * empty = new Semaphore(this->empty, number);
 
     mutex->wait();
-    unsigned sampleNr, idx;
+    unsigned sampleIndex, i;
+    i = 0;
     // Find the index of the first sample not analyzed.
-    for (sampleNr = 0, idx = (sampleHolder->read + sampleNr) % HOLDER_CAPACITY; sampleNr < sampleHolder->amount && sampleHolder->status[idx][number] != NOT_ANALYZED; sampleNr++);
-    if (sampleHolder->status[idx][number] != NOT_ANALYZED)
+    do
+    {
+        sampleIndex = (sampleHolder->read + i) % HOLDER_CAPACITY;
+    } while (i++ < sampleHolder->amount && sampleHolder->status[sampleIndex][number] != NOT_ANALYZED);
+    if (sampleHolder->status[sampleIndex][number] != NOT_ANALYZED)
     {
         sampleHolder->analyzerStatus[number] = WAITING;
-        Helper::output(stdout, owner + " espero muestras para analizar\n");
+        Helper::output(stdout, owner + " waiting for samples to analyze\n");
         mutex->post();
         empty->wait();
         mutex->wait();
         // Find the index of the first sample not analyzed. (Again)
-        for (sampleNr = 0, idx = (sampleHolder->read + sampleNr) % HOLDER_CAPACITY; sampleNr < sampleHolder->amount && sampleHolder->status[idx][number] != NOT_ANALYZED; sampleNr++);
+        // We don't reset i to 0 because we know all the previous samples are analyzed
+        // and i points to the place after where the new sample would be.
+        i--;
+        do
+        {
+            sampleIndex = (sampleHolder->read + i) % HOLDER_CAPACITY;
+        } while (i++ < sampleHolder->amount && sampleHolder->status[sampleIndex][number] != NOT_ANALYZED);
     }
+    ss << owner << " analyzing sample " << sampleHolder->samples[sampleIndex].id << " in slot " << sampleIndex << std::endl;
+    Helper::output(stdout, ss);
     sampleHolder->analyzerStatus[number] = WORKING;
-    sampleHolder->status[idx][number] = ANALYZED;
+    sampleHolder->status[sampleIndex][number] = ANALYZED;
+    sample = sampleHolder->samples[sampleIndex];
+    // If it's the first element then it can be removed if everyone read it
+    if (sampleIndex == sampleHolder->read)
+    {
+        unsigned a = 0;
+        while (a < ANALYZER_AMOUNT && sampleHolder->status[sampleIndex][a++] == ANALYZED);
+        // If everyone read it remove the element
+        if (a == ANALYZER_AMOUNT)
+        {
+            sampleHolder->samples[sampleIndex].id = 0;
+            sampleHolder->read = (sampleHolder->read + 1) % HOLDER_CAPACITY;
+            sampleHolder->amount--;
+            // If any sampler is waiting, notify the samplers.
+            if (sampleHolder->waitingSamplers)
+            {
+                ss << owner << " waking up a sampler" << std::endl;
+                full->post();
+            }
+        }
+    }
     mutex->post();
-    return sampleHolder->samples[0];
+    return sample;
 }

@@ -2,6 +2,7 @@
 #include "Semaphore.h"
 #include "SharedMemory.cpp"
 #include "Queue.cpp"
+#include "Analyzer.h"
 
 int main()
 {
@@ -34,7 +35,7 @@ int main()
     s = new SemaphoreArray(PATH, SEM_MUTEX, 1, "terminador", false);
     s->get();
     s->remove();
-    s = new SemaphoreArray(PATH, SEM_EMPTY, 1, "terminador", false);
+    s = new SemaphoreArray(PATH, SEM_EMPTY, ANALYZER_AMOUNT, "terminador", false);
     s->get();
     s->remove();
     s = new SemaphoreArray(PATH, SEM_FULL, 1, "terminador", false);
