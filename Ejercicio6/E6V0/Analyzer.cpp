@@ -104,6 +104,8 @@ struct sample Analyzer::getSample(long number)
         // If everyone read it remove the element
         if (a == ANALYZER_AMOUNT)
         {
+            ss << owner << " removing sample " << sampleHolder->samples[sampleIndex].id << " from slot " << sampleIndex << std::endl;
+            Helper::output(stdout, ss, "\033[1;31m");
             sampleHolder->samples[sampleIndex].id = 0;
             sampleHolder->read = (sampleHolder->read + 1) % HOLDER_CAPACITY;
             sampleHolder->amount--;
@@ -111,6 +113,8 @@ struct sample Analyzer::getSample(long number)
             if (sampleHolder->waitingSamplers)
             {
                 ss << owner << " waking up a sampler" << std::endl;
+                Helper::output(stdout, ss, "\033[1;32m");
+                sampleHolder->waitingSamplers--;
                 full->post();
             }
         }

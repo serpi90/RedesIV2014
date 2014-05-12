@@ -51,6 +51,9 @@ int main()
     s->create();
     s = new SemaphoreArray(PATH, SEM_FULL, 1, "iniciador");
     s->create();
+    s = new SemaphoreArray(PATH, SEM_SAMPLER, 1, "iniciador");
+    s->create();
+    s->post(0);
 
     pid_t pid;
     pid = fork();

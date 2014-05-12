@@ -11,6 +11,8 @@ Sampler::Sampler()
     out->get();
     mutex = new Semaphore(PATH, SEM_MUTEX, owner);
     mutex->get();
+    mutexSampler = new Semaphore(PATH, SEM_SAMPLER, owner);
+    mutexSampler->get();
     full = new Semaphore(PATH, SEM_FULL, owner);
     full->get();
     empty = new SemaphoreArray(PATH, SEM_EMPTY, ANALYZER_AMOUNT, owner);
@@ -61,18 +63,21 @@ void Sampler::init(void)
 void Sampler::placeSample(struct sample sample)
 {
     std::stringstream ss;
+    mutexSampler->wait();
     mutex->wait();
+    ss << owner << " trying to put sample " << sample.id << " there are " << sampleHolder->amount << "/" << HOLDER_CAPACITY << " samples" << std::endl;
+    Helper::output(stdout, ss, "\033[33m");
     // Wait if the sample holder is full
     if (sampleHolder->amount == HOLDER_CAPACITY)
     {
-        Helper::output(stdout, owner + " sample holder full, waiting\n");
+        Helper::output(stdout, owner + " sample holder full, waiting\n", "\033[1;31m");
         sampleHolder->waitingSamplers++;
         mutex->post();
         full->wait();
         mutex->wait();
     }
-    ss << owner << " placing sample " << sample.id << " in slot " << sampleHolder->write << " there are now " << sampleHolder->amount << "/" << HOLDER_CAPACITY << " samples" << std::endl;
-    Helper::output(stdout, ss);
+    ss << owner << " about to place sample " << sample.id << " in slot " << sampleHolder->write << " there are now " << sampleHolder->amount << "/" << HOLDER_CAPACITY << " samples" << std::endl;
+    Helper::output(stdout, ss, "\033[1;33m");
     sampleHolder->samples[sampleHolder->write] = sample;
     for (unsigned a = 0; a < ANALYZER_AMOUNT; a++)
     {
@@ -81,7 +86,7 @@ void Sampler::placeSample(struct sample sample)
     sampleHolder->write = (sampleHolder->write + 1) % HOLDER_CAPACITY;
     sampleHolder->amount++;
     ss << owner << " placing sample " << sample.id << " in slot " << sampleHolder->write << " there are now " << sampleHolder->amount << "/" << HOLDER_CAPACITY << " samples" << std::endl;
-    Helper::output(stdout, ss);
+    Helper::output(stdout, ss, "\033[1;33m");
     // We check if there's an analyzer waiting
     // This is done always, not only when the holder is empty, 
     // because an analyzer might already have analyzed all the previous samples
@@ -91,10 +96,11 @@ void Sampler::placeSample(struct sample sample)
         if (sampleHolder->analyzerStatus[a] == WAITING)
         {
             ss << owner << " Waking up analyzer " << a << std::endl;
-            Helper::output(stdout, ss);
+            Helper::output(stdout, ss, "\033[1;32m");
             empty->post(a);
             sampleHolder->analyzerStatus[a] = WORKING;
         }
     }
     mutex->post();
+    mutexSampler->post();
 }

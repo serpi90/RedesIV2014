@@ -41,4 +41,7 @@ int main()
     s = new SemaphoreArray(PATH, SEM_FULL, 1, "terminador", false);
     s->get();
     s->remove();
+    s = new SemaphoreArray(PATH, SEM_SAMPLER, 1, "terminador", false);
+    s->get();
+    s->remove();
 }

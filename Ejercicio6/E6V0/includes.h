@@ -21,6 +21,7 @@
 #define SEM_MUTEX                 6
 #define SEM_EMPTY                 7
 #define SEM_FULL                  8
+#define SEM_SAMPLER               9
 
 // Message Types
 

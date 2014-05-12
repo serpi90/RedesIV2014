@@ -16,6 +16,7 @@ private:
     Queue<struct iMessage> * in, * out;
     Semaphore * mutex;
     Semaphore * full;
+    Semaphore * mutexSampler;
     SemaphoreArray * empty;
     SharedMemory<struct sampleHolder> * shm;
     struct sampleHolder * sampleHolder;
