@@ -12,13 +12,13 @@
 
 ## Estado de los ejercicios
 
-1. [V0](/master/Ejercicio1/E1V0/)
+1. [V0](Ejercicio1/E1V0/)
 2. N/A
 3. N/A
-4. [V0](/master/Ejercicio4/E4V0/)
-5. [V0](/master/Ejercicio5/E5V0/)
-6. [V0](/master/Ejercicio6/E6V0/)
-7. [V0](/master/Ejercicio7/E7V0/)
+4. [V0](Ejercicio4/E4V0/)
+5. [V0](Ejercicio5/E5V0/)
+6. [V0](Ejercicio6/E6V0/)
+7. [V0](Ejercicio7/E7V0/)
 8. N/A
 9. N/A
 10. N/A
