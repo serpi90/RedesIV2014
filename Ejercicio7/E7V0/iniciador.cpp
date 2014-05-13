@@ -11,6 +11,10 @@ int main()
     q->create();
     q = new Queue<struct iMessage>(PATH, Q_TO_INTERFACE, "iniciador");
     q->create();
+    q = new Queue<struct iMessage>(PATH, Q_TO_IREPOSITOR, "iniciador");
+    q->create();
+    q = new Queue<struct iMessage>(PATH, Q_FROM_IREPOSITOR, "iniciador");
+    q->create();
 
     // Create and initialize the semaphores
     Semaphore * s;

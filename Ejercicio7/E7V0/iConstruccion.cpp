@@ -25,3 +25,20 @@ void iConstruccion::entregarChasis()
         Helper::output(stderr, ss);
     }
 }
+
+unsigned iConstruccion::reponer()
+{
+    struct iMessage msg;
+    msg.type = M_CONSTRUCCION;
+    msg.message = REPONER;
+    msg.data.aReponer = MATERIALES;
+    out->send(msg);
+    msg = in->receive(M_CONSTRUCCION);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}

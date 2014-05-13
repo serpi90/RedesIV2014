@@ -8,6 +8,7 @@ class iConstruccion {
 public:
     iConstruccion();
     void entregarChasis();
+    unsigned reponer();
 private:
     std::string owner;
     Queue<struct iMessage> * in, * out;

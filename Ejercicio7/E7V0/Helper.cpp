@@ -102,6 +102,12 @@ std::string Helper::msgToString(enum iMessageType m)
         case RECIBIDO_INTERIORES:
             return std::string(BROWN) + "RECIBIDO INTERIORES" + NORMAL;
             break;
+        case REPONER:
+            return std::string(BROWN) + "REPONER" + NORMAL;
+            break;
+        case REPONER_OK:
+            return std::string(BROWN) + "REPONER OK" + NORMAL;
+            break;
         default:
             std::stringstream ss;
             ss << m;
@@ -132,3 +138,37 @@ std::string Helper::msgToString(long l)
     }
 }
 
+std::string Helper::msgToString(enum materiales m)
+{
+    switch (m)
+    {
+        case MATERIALES:
+            return std::string(D_GREEN) + "MATERIALES" + NORMAL;
+            break;
+        case PINTURA:
+            return std::string(D_GREEN) + "PINTURA" + NORMAL;
+            break;
+        case MOTOR:
+            return std::string(D_GREEN) + "MOTOR" + NORMAL;
+            break;
+        case INTERIORES:
+            return std::string(D_GREEN) + "INTERIORES" + NORMAL;
+            break;
+        case RUEDA:
+            return std::string(D_GREEN) + "RUEDA" + NORMAL;
+            break;
+        case PUERTA:
+            return std::string(D_GREEN) + "PUERTA" + NORMAL;
+            break;
+        case CAPO:
+            return std::string(D_GREEN) + "CAPO" + NORMAL;
+            break;
+        case BAUL:
+            return std::string(D_GREEN) + "BAUL" + NORMAL;
+            break;
+        default:
+            std::stringstream ss;
+            ss << BG_RED << WHITE << m << NORMAL;
+            return ss.str();
+    }
+}

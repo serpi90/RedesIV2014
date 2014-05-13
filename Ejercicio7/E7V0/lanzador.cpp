@@ -72,4 +72,14 @@ int main()
         perror("colocadoExterior - fork: ");
     }
 
+    pid = fork();
+    if (pid == 0)
+    {
+        execlp("./repositor", "repositor", NULL);
+        perror("repositor - execlp: ");
+        exit(EXIT_FAILURE);
+    } else if (pid < 0)
+    {
+        perror("repositor - fork: ");
+    }
 }

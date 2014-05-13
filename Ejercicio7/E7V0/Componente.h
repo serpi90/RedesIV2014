@@ -3,6 +3,7 @@
 
 #include "Queue.cpp"
 #include "Semaphore.h"
+#include "includes.h"
 #include <string>
 
 class Componente {
@@ -11,7 +12,7 @@ public:
     void init(void);
 private:
     std::string owner;
-    Queue<struct iMessage> * in, * out;
+    Queue<struct iMessage> * in, * out, * fromRep, * toRep;
     Semaphore
     * pintar,
     * pintar2,
@@ -43,6 +44,8 @@ private:
     void entregarInteriores();
     void esperarInteriores();
     void recibidoInteriores();
+
+    unsigned reponer(long client, enum materiales m);
 };
 
 #endif	/* COMPONENTE_H */

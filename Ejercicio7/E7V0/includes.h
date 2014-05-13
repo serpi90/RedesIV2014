@@ -6,6 +6,8 @@
 #define PATH "/home/knoppix/Maestri/Ejercicio7/E7V0"
 #define Q_FROM_INTERFACE 11
 #define Q_TO_INTERFACE 12
+#define Q_FROM_IREPOSITOR 13
+#define Q_TO_IREPOSITOR 14
 
 #define SEM_PINTAR 1
 #define SEM_PINTAR2 2
@@ -26,7 +28,7 @@
 #define M_COLOCADO_MOTOR 4
 #define M_COLOCADO_INTERIOR 5
 #define M_COLOCADO_EXTERIOR 6
-
+#define M_REPOSITOR 7
 // Messages
 
 enum iMessageType {
@@ -48,12 +50,29 @@ enum iMessageType {
 
     ENTREGAR_INTERIORES, ENTREGAR_INTERIORES_OK,
     RECIBIR_INTERIORES, RECIBIR_INTERIORES_OK,
-    RECIBIDO_INTERIORES
+    RECIBIDO_INTERIORES,
+
+    REPONER, REPONER_OK
+};
+
+enum materiales {
+    MATERIALES,
+    PINTURA,
+    MOTOR,
+    INTERIORES, RUEDA,
+    PUERTA, CAPO, BAUL
+};
+
+union iMessageContent {
+    enum materiales aReponer;
+    unsigned cantidad;
 };
 
 struct iMessage {
     long type;
     enum iMessageType message;
+    union iMessageContent data;
+    
 };
 
 #endif	/* INCLUDES_H */

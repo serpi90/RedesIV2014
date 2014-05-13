@@ -4,7 +4,11 @@ iniciador
 lanzador
 shmstat
 *.o
-comp-analyzer
-comp-sampler
-analyzer
-sampler
+componente
+construccion
+pintado
+secado
+colocadoMotor
+colocadoInterior
+colocadoExterior
+repositor

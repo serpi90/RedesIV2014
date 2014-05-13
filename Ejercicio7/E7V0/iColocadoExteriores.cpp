@@ -33,3 +33,54 @@ void iColocadoExteriores::recibidoInteriores()
     msg.message = RECIBIDO_INTERIORES;
     out->send(msg);
 }
+
+unsigned iColocadoExteriores::reponerBaules()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_EXTERIOR;
+    msg.message = REPONER;
+    msg.data.aReponer = BAUL;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_EXTERIOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}
+
+unsigned iColocadoExteriores::reponerCapos()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_EXTERIOR;
+    msg.message = REPONER;
+    msg.data.aReponer = CAPO;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_EXTERIOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}
+
+unsigned iColocadoExteriores::reponerPuertas()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_EXTERIOR;
+    msg.message = REPONER;
+    msg.data.aReponer = PUERTA;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_EXTERIOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}

@@ -13,6 +13,12 @@ int main()
     q = new Queue<struct iMessage>(PATH, Q_TO_INTERFACE, "terminador", false);
     q->get();
     q->remove();
+    q = new Queue<struct iMessage>(PATH, Q_TO_IREPOSITOR, "terminador", false);
+    q->get();
+    q->remove();
+    q = new Queue<struct iMessage>(PATH, Q_FROM_IREPOSITOR, "terminador", false);
+    q->get();
+    q->remove();
 
     // Create and initialize the semaphores
     Semaphore * s;

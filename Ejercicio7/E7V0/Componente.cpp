@@ -30,6 +30,10 @@ Componente::Componente()
     in->get();
     out = new Queue<struct iMessage>(PATH, Q_TO_INTERFACE, owner);
     out->get();
+    fromRep = new Queue<struct iMessage>(PATH, Q_FROM_IREPOSITOR, owner);
+    fromRep->get();
+    toRep = new Queue<struct iMessage>(PATH, Q_TO_IREPOSITOR, owner);
+    toRep->get();
 }
 
 void Componente::init()
@@ -113,6 +117,11 @@ void Componente::init()
                 case RECIBIDO_INTERIORES:
                     recibidoInteriores();
                     exit(EXIT_SUCCESS);
+                    break;
+
+                case REPONER:
+                    msg.message = REPONER_OK;
+                    msg.data.cantidad = reponer(msg.type, msg.data.aReponer);
                     break;
 
                 default:
@@ -206,4 +215,15 @@ void Componente::esperarInteriores()
 void Componente::recibidoInteriores()
 {
     exterior2->post();
+}
+
+unsigned Componente::reponer(long client, enum materiales m)
+{
+    struct iMessage msg;
+    msg.type = client;
+    msg.message = REPONER;
+    msg.data.aReponer = m;
+    toRep->send(msg);
+    msg = fromRep->receive(client);
+    return msg.data.cantidad;
 }

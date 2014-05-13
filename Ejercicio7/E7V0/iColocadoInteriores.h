@@ -10,6 +10,8 @@ public:
     void esperarMotor();
     void recibidoMotor();
     void entregarInteriores();
+    unsigned reponerInteriores();
+    unsigned reponerRuedas();
 private:
     std::string owner;
     Queue<struct iMessage> * in, * out;

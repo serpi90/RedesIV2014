@@ -9,6 +9,10 @@ public:
     iColocadoExteriores();
     void esperarInteriores();
     void recibidoInteriores();
+    unsigned reponerPuertas();
+    unsigned reponerCapos();
+    unsigned reponerBaules();
+
 private:
     std::string owner;
     Queue<struct iMessage> * in, * out;

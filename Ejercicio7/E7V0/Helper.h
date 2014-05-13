@@ -41,6 +41,7 @@ public:
     };
     static std::string msgToString(enum iMessageType);
     static std::string msgToString(long l);
+    static std::string msgToString(enum materiales m);
     static void output(FILE*, std::stringstream&, std::string colour = NORMAL);
     static void output(FILE*, std::string, std::string colour = NORMAL);
     static unsigned int doSleep(int min, int max);

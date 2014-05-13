@@ -48,3 +48,37 @@ void iColocadoInteriores::entregarInteriores()
         Helper::output(stderr, ss);
     }
 }
+
+unsigned iColocadoInteriores::reponerInteriores()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_INTERIOR;
+    msg.message = REPONER;
+    msg.data.aReponer = INTERIORES;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_INTERIOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}
+
+unsigned iColocadoInteriores::reponerRuedas()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_INTERIOR;
+    msg.message = REPONER;
+    msg.data.aReponer = RUEDA;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_INTERIOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}

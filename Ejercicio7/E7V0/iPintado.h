@@ -10,6 +10,7 @@ public:
     void esperarChasis();
     void recibidoChasis();
     void entregarPintado();
+    unsigned reponer();
 private:
     std::string owner;
     Queue<struct iMessage> * in, * out;

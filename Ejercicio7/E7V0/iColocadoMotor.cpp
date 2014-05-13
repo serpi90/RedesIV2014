@@ -48,3 +48,20 @@ void iColocadoMotor::entregarMotor()
         Helper::output(stderr, ss);
     }
 }
+
+unsigned iColocadoMotor::reponer()
+{
+    struct iMessage msg;
+    msg.type = M_COLOCADO_MOTOR;
+    msg.message = REPONER;
+    msg.data.aReponer = MOTOR;
+    out->send(msg);
+    msg = in->receive(M_COLOCADO_MOTOR);
+    if (msg.message != REPONER_OK)
+    {
+        std::stringstream ss;
+        ss << owner << BG_RED << WHITE << " Error" << NORMAL << " mensaje incorrecto " << Helper::msgToString(msg.message) << " esperaba " << Helper::msgToString(REPONER_OK) << std::endl;
+        Helper::output(stderr, ss);
+    }
+    return msg.data.cantidad;
+}
