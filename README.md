@@ -19,7 +19,7 @@
 5. [V0](Ejercicio5/E5V0/)
 6. [V0](Ejercicio6/E6V0/)
 7. [V0](Ejercicio7/E7V0/)
-8. N/A
+8. [V0](Ejercicio8/E8V0/)
 9. N/A
 10. N/A
 11. N/A
