@@ -23,27 +23,27 @@ all: $(OBJS) $(PROGS)
 
 # Ejecutables
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.cpp includes.h Config.h Helper.h
+$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
 	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o Interfaz.o
 
-$(COMPONENTES): %: %.cpp $(IPC) Helper.h includes.h Config.h
+$(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h Config.o
 	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
 
-$(LANZADORES): %: %.cpp $(IPC) Config.h includes.h
+$(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
 
 # Objetos
 
-$(MODELO): %.o: %.cpp %.h includes.h Helper.h Config.h
+$(MODELO): %.o: %.cpp %.h includes.h Helper.o Config.o
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(INTERFACES): %.o: %.cpp %.h includes.h Helper.h Interfaz.h
+$(INTERFACES): %.o: %.cpp %.h includes.h Helper.o Interfaz.o
 	$(C++) -c -o $@ $< $(CFLAGS)
 
 $(IPC_CON_HEADER) $(ACCESORIOS): %.o: %.cpp %.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 	
-Interfaz.o: Interfaz.cpp Interfaz.h Queue.cpp Helper.h
+Interfaz.o: Interfaz.cpp Interfaz.h Queue.o Helper.o
 	$(C++) -c -o $@ $< $(CFLAGS)
 
 $(IPC_SIN_HEADER): %.o: %.cpp
