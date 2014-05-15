@@ -17,6 +17,6 @@ double iLector::leer()
     struct iMessage msg;
     msg.type = this->id;
     msg.message = QUIERO_LEER;
-    interfaz->request(msg, this->id, LEE);
+    msg = interfaz->request(msg, this->id, LEE);
     return msg.cotizacion;
 }

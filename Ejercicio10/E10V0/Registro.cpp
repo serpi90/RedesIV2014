@@ -1,9 +1,6 @@
-
-#include "includes.h"
-
-#include "Registro.h"
 #include <sstream>
 #include <string>
+#include "Registro.h"
 #include "Helper.h"
 #include "Config.h"
 
@@ -25,6 +22,11 @@ Registro::Registro()
     shm = new SharedMemory<struct registro>(PATH, SHM_REGISTRO, owner);
     shm->get();
     this->registro = shm->attach();
+    Config conf("config.conf");
+    lecMin = conf.getInt("lectura min", 1);
+    lecMax = conf.getInt("lectura mxn", 5);
+    escMin = conf.getInt("escritura min", 1);
+    escMax = conf.getInt("escritura max", 5);
 }
 
 void Registro::init()
@@ -95,11 +97,11 @@ double Registro::leer()
     mutex->post();
     cotizacion = registro->cotizacion;
     // Simular lectura.
-    Helper::doSleep(1, 5);
+    Helper::doSleep(lecMin, lecMax);
     mutex->wait();
     registro->lectoresLeyendo--;
     // El ultimo lector libera el semaforo de acceso a cotizaciones.
-    if (registro->lectores == 0)
+    if (registro->lectoresLeyendo == 0)
     {
         // Ya que soy el ultimo, si hay un escritor esperando deberia entrar.
         if (registro->escritoresEsperando)
@@ -126,8 +128,11 @@ void Registro::escribir(double cotizacion)
     mutex->post();
     cotiz->wait();
     registro->cotizacion = cotizacion;
-    mutex->wait();
+    // Simular escritura.
+    Helper::doSleep(escMin, escMax);
     cotiz->post();
+    mutex->wait();
+    registro->lectores = 0;
     if (registro->lectoresEsperando)
     {
         esperaLectores->post();

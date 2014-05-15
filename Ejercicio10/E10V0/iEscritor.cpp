@@ -18,5 +18,5 @@ void iEscritor::escribir(double cotizacion)
     msg.type = this->id;
     msg.message = QUIERO_ESCRIBIR;
     msg.cotizacion = cotizacion;
-    interfaz->request(msg, this->id, ESCRIBI);
+    msg = interfaz->request(msg, this->id, ESCRIBI);
 }

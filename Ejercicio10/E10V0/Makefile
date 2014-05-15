@@ -7,7 +7,7 @@ CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
 COMPONENTES = registro
 PROGRAMAS = escritor lector
-LANZADORES = iniciador terminador lanzador
+LANZADORES = iniciador terminador lanzador shmstat
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
 
 IPC_CON_HEADER = Semaphore.o SemaphoreArray.o
@@ -23,13 +23,13 @@ all: $(OBJS) $(PROGS)
 
 # Ejecutables
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Helper.o Config.o Interfaz.o
+$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.cpp includes.h Config.h Helper.h
+	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o Interfaz.o
 
-$(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o 
+$(COMPONENTES): %: %.cpp $(IPC) Helper.h includes.h Config.h
+	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
 
-$(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
+$(LANZADORES): %: %.cpp $(IPC) Config.h includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
 
 # Objetos
@@ -54,6 +54,8 @@ $(IPC_SIN_HEADER): %.o: %.cpp
 Semaphore.o: SemaphoreArray.o
 lanzador: Helper.o
 registro: Registro.o
+lector: iLector.o
+escritor: iEscritor.o
 
 # Limpieza
 

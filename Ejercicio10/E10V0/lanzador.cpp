@@ -15,21 +15,7 @@ int main(int argc, char* argv[])
     }
     pid_t pid;
     unsigned r = atoi(argv[1]), w = atoi(argv[2]);
-    for (unsigned i = 0; i < r; i++)
-    {
-        ss << i;
-        pid = fork();
-        if (pid == 0)
-        {
-            execlp("./lector", "lector", ss.str().c_str(), NULL);
-            perror("lector - execlp: ");
-            exit(EXIT_FAILURE);
-        } else if (pid < 0)
-        {
-            perror("lector - fork: ");
-        }
-        ss.str("");
-    }
+
     for (unsigned i = 0; i < w; i++)
     {
         ss << i;
@@ -42,6 +28,22 @@ int main(int argc, char* argv[])
         } else if (pid < 0)
         {
             perror("escritor - fork: ");
+        }
+        ss.str("");
+    }
+
+    for (unsigned i = 0; i < r; i++)
+    {
+        ss << i;
+        pid = fork();
+        if (pid == 0)
+        {
+            execlp("./lector", "lector", ss.str().c_str(), NULL);
+            perror("lector - execlp: ");
+            exit(EXIT_FAILURE);
+        } else if (pid < 0)
+        {
+            perror("lector - fork: ");
         }
         ss.str("");
     }

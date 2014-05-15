@@ -18,6 +18,7 @@ private:
     Semaphore * mutex;
     SharedMemory<struct registro> * shm;
     struct registro * registro;
+    int lecMin, lecMax, escMin, escMax;
 
     double leer();
     void escribir(double);
