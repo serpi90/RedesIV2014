@@ -14,7 +14,7 @@
 
 1. [V0](Ejercicio1/E1V0/)
 2. N/A
-3. N/A
+3. [V0](Ejercicio3/E3V0/)
 4. [V0](Ejercicio4/E4V0/)
 5. [V0](Ejercicio5/E5V0/)
 6. [V0](Ejercicio6/E6V0/)
