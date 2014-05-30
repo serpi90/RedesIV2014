@@ -1,17 +1,15 @@
 #ifndef IPRODUCTOR_H
 #define	IPRODUCTOR_H
-#include "Interfaz.h"
+#include "Queue.cpp"
 #include <string>
 
 class iProductor {
 public:
-    iProductor(long numero);
+    iProductor();
     void producirOrden(struct orden orden);
 private:
-    long numero;
-    long id;
     std::string owner;
-    Interfaz * interfaz;
+    Queue<struct msgAlmacen> * q;
 };
 
 #endif	/* IPRODUCTOR_H */

@@ -3,16 +3,16 @@
 #include "iEncargado.h"
 #include <sstream>
 
-int main(int argc, char* argv[])
+int main()
 {
     std::stringstream ss;
     std::string owner;
-    long number = (long) MOTHERBOARDS;
+    long number = 2;
     srand(time(NULL) + number);
     ss << "Encargado motherboards " << number << ": ";
     owner = ss.str();
     ss.str("");
-    iEncargado * i = new iEncargado(number, MOTHERBOARDS);
+    iEncargado * i = new iEncargado(number);
     Config conf("config.conf");
     int min, max;
     struct orden o;

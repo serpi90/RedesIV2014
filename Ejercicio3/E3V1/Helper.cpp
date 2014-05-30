@@ -22,23 +22,3 @@ unsigned int Helper::doSleep(int min, int max)
     sleep(min + rand() % (max - min + 1));
     return time;
 }
-
-std::string Helper::msgToString(enum iMessageType m)
-{
-    switch (m)
-    {
-        case PRODUCIR_ORDEN:
-            return std::string(BROWN) + "PRODUCIR ORDEN" + NORMAL;
-            break;
-        case CONSUMIR_ORDEN:
-            return std::string(BROWN) + "CONSUMIR ORDEN" + NORMAL;
-            break;
-        case CONSUMISTE_ORDEN:
-            return std::string(BROWN) + "CONSUMISTE ORDEN" + NORMAL;
-            break;
-        default:
-            std::stringstream ss;
-            ss << m;
-            return ss.str();
-    }
-}

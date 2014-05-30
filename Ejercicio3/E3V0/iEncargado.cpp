@@ -1,24 +1,22 @@
 #include "iEncargado.h"
 #include "includes.h"
+#include "Queue.cpp"
 #include <sstream>
 
-iEncargado::iEncargado(long numero, enum encargados e)
+iEncargado::iEncargado(long numero)
 {
     std::stringstream ss;
     this->numero = numero;
     this->id = M_CONS + numero;
     ss << "iEncargado " << this->numero << " (" << this->id << ")";
     this->owner = ss.str();
-    interfaz = new Interfaz(PATH, Q_TO_INTERFACE, Q_FROM_INTERFACE, this->owner);
-    this->e = e;
+    q = new Queue<struct msgAlmacen>(PATH, Q_ALMACEN, owner);
+    q->get();
 }
 
 struct orden iEncargado::consumirOrden()
 {
-    struct iMessage msg;
-    msg.type = this->id;
-    msg.message = CONSUMIR_ORDEN;
-    msg.data.tipoEncargado = e;
-    msg = interfaz->request(msg, this->id, CONSUMISTE_ORDEN);
-    return msg.data.orden;
+    struct msgAlmacen msg;
+    msg = q->receive(this->id);
+    return msg.orden;
 }

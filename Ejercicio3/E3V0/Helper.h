@@ -39,7 +39,6 @@ public:
     Helper() {
         srand(time(NULL));
     };
-    static std::string msgToString(enum iMessageType);
     static void output(FILE*, std::stringstream&, std::string colour = NORMAL);
     static void output(FILE*, std::string, std::string colour = NORMAL);
     static unsigned int doSleep(int min, int max);

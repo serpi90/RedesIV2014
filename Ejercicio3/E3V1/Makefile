@@ -1,9 +1,9 @@
 C++ = g++
-DFLAGS = -Wall -g
+DFLAGS = -Wall -Wextra -ansi -pedantic-errors
 #OFLAGS = -O3
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
-COMPONENTES = almacen
+COMPONENTES = 
 PROGRAMAS = productor encargadoDiscos encargadoProcesadores encargadoMotherboards
 LANZADORES = iniciador terminador lanzador
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
@@ -13,16 +13,19 @@ IPC_SIN_HEADER = Queue.o Socket.o
 IPC = $(IPC_CON_HEADER) $(IPC_SIN_HEADER)
 
 INTERFACES = iProductor.o iEncargado.o
-MODELO = Almacen.o
+MODELO = 
 ACCESORIOS = Helper.o Config.o
-OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS) Interfaz.o
+OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
-all: $(OBJS) $(PROGS)
+all: rpc $(OBJS) $(PROGS) 
+
+rpc: RPC/idManager.x RPC/idManager_server.c
+	make -C RPC --no-print-directory
 
 # Ejecutables
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h Config.o Helper.o Interfaz.o
-	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o Interfaz.o
+$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
+	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o
 
 $(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h Config.o
 	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
@@ -32,13 +35,10 @@ $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 
 # Objetos
 
-$(MODELO): %.o: %.cpp %.h includes.h Helper.o Config.o
+$(MODELO): %.o: %.cpp %.h includes.h Helper.h Config.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 
-$(INTERFACES): %.o: %.cpp %.h includes.h Helper.o Interfaz.o
-	$(C++) -c -o $@ $< $(CFLAGS)
-
-Interfaz.o: Interfaz.cpp Interfaz.h Queue.o Helper.o
+$(INTERFACES): %.o: %.cpp %.h includes.h Helper.h
 	$(C++) -c -o $@ $< $(CFLAGS)
 
 $(IPC_CON_HEADER) $(ACCESORIOS): %.o: %.cpp %.h
@@ -49,7 +49,6 @@ $(IPC_SIN_HEADER): %.o: %.cpp
 
 # Dependencias especificas
 
-almacen: Almacen.o
 productor: iProductor.o
 encargadoDiscos: iEncargado.o
 encargadoProcesadores: iEncargado.o
@@ -59,3 +58,4 @@ encargadoMotherboards: iEncargado.o
 
 clean:
 	rm -f *.o $(PROGS)
+	make -C RPC --no-print-directory clean

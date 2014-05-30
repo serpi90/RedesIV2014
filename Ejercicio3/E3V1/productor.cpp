@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     ss << "Productor " << number << ": ";
     owner = ss.str();
     ss.str("");
-    iProductor * i = new iProductor(number);
+    iProductor * i = new iProductor();
     Config conf("config.conf");
     int min, max, maxDiscos, maxProcesadores, maxMotherboards;
     struct orden o;
