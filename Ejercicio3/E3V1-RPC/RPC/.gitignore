@@ -1,4 +1,4 @@
 idManager_client.c
-idManager_server.c
+idManager_server
 Makefile.idManager
 ids.dat
