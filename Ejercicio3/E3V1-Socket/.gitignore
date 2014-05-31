@@ -12,3 +12,5 @@ net-sender
 net-receiver
 net-controller
 net-idManager
+ids.dat
+

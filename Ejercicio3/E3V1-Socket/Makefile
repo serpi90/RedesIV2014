@@ -1,5 +1,5 @@
 C++ = g++
-DFLAGS = -Wall -Wextra -ansi -pedantic-errors
+DFLAGS = -Wall -Wextra -ansi -pedantic-errors -g
 #OFLAGS = -O3
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
@@ -58,4 +58,4 @@ encargadoMotherboards: iEncargado.o
 # Limpieza
 
 clean:
-	rm -f *.o $(PROGS)
+	rm -f *.o $(PROGS) ids.dat

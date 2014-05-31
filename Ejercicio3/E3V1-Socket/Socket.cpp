@@ -8,11 +8,14 @@ Socket::Socket(std::string owner, bool displayErrors)
     this->displayErrors = displayErrors;
 }
 
-Socket::Socket(int sockfd, std::string owner, bool displayErrors)
+Socket::Socket(int sockfd, struct sockaddr_in local_address, struct sockaddr_in remote_address, std::string owner, bool displayErrors)
 {
     this->sockfd = sockfd;
     this->owner = owner;
     this->displayErrors = displayErrors;
+
+    this->local_address = local_address;
+    this->remote_address = remote_address;
 }
 
 int Socket::passive(unsigned short port)
@@ -99,7 +102,7 @@ Socket * Socket::doAccept()
         return NULL;
     } else
     {
-        return new Socket(newsockfd, owner, displayErrors);
+        return new Socket(newsockfd, local_address, remote_address, owner, displayErrors);
     }
 }
 

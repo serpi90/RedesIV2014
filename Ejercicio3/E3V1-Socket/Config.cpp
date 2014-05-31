@@ -4,24 +4,27 @@
 
 Config::Config(std::string filename, unsigned maxLineLength)
 {
-    char * rawLine = (char*)malloc(sizeof (char) * maxLineLength);
+    char * rawLine = (char*) malloc(sizeof (char) * maxLineLength);
     std::string line, key, value;
     std::ifstream file(filename.c_str());
-    while (!file.eof())
+    if (file.is_open())
     {
-        file.getline(rawLine, maxLineLength);
-        line = trim(std::string(rawLine));
-        if (line[0] != '#' && line[0] != ';' && !line.empty())
+        while (!file.eof())
         {
-            key = trim(line.substr(0, line.find('=')));
-            value = trim(line.substr(line.find('=')).erase(0, 1));
-            if (!key.empty())
+            file.getline(rawLine, maxLineLength);
+            line = trim(std::string(rawLine));
+            if (line[0] != '#' && line[0] != ';' && !line.empty())
             {
-                properties.insert(std::pair<std::string, std::string>(key, value));
+                key = trim(line.substr(0, line.find('=')));
+                value = trim(line.substr(line.find('=')).erase(0, 1));
+                if (!key.empty())
+                {
+                    properties.insert(std::pair<std::string, std::string>(key, value));
+                }
             }
         }
+        free(rawLine);
     }
-    free(rawLine);
 }
 
 std::string Config::getString(std::string key, std::string defaultValue)

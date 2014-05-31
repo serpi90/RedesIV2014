@@ -23,6 +23,7 @@ iEncargado::iEncargado(long numero)
     query.type = REGISTER;
     connection->send((char*) &query, sizeof (query));
     connection->receive((char*) &query, sizeof (query));
+    connection->doClose();
 
     this->id = query.response.info.mtype;
     ss << " (" << this->id << ")";

@@ -5,7 +5,7 @@
 #define CANT_CONSUMIDORES 3
 
 // IPC Definitions
-#define PATH "/home/knoppix/Maestri/Ejercicio3/E3V1"
+#define PATH "/home/knoppix/Maestri/Ejercicio3/E3V1-Socket"
 #define Q_FROM_INTERFACE_TO_CTL 1
 #define Q_FROM_CTL_TO_NET 2
 #define Q_FROM_NET_TO_INTERFACE 3

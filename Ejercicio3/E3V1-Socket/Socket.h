@@ -28,7 +28,7 @@ public:
     in_addr getLocalAddress();
     int error;
 private:
-    Socket(int sockfd, std::string owner, bool displayErrors = true);
+    Socket(int sockfd, struct sockaddr_in local_address, struct sockaddr_in remote_address, std::string owner, bool displayErrors = true);
     void show_error(std::string where);
 
     int sockfd;

@@ -67,4 +67,15 @@ int main(int argc, char* argv[])
     {
         perror("encargadoMotherboards - fork: ");
     }
+
+    pid = fork();
+    if (pid == 0)
+    {
+        execlp("./net-controller", "net-controller", NULL);
+        perror("net-controller - execlp: ");
+        exit(EXIT_FAILURE);
+    } else if (pid < 0)
+    {
+        perror("net-controller - fork: ");
+    }
 }

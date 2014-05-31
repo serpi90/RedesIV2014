@@ -5,30 +5,30 @@
 #include "Config.h"
 #include "Queue.cpp"
 
-int main(int argc, char** argv)
-{
-    if (argc < 4)
-    {
+int main(int argc, char** argv) {
+    if (argc < 5) {
         Helper::output(stderr, "usage: net-sender <address> <port> <queue id> <mtype>\n", RED);
         exit(EXIT_FAILURE);
     }
-    const char * address = argv[0];
-    unsigned short port = (unsigned short) atoi(argv[1]);
-    int qid = atoi(argv[2]);
-    long mtype = atol(argv[3]);
+    const char * address = argv[1];
+    unsigned short port = (unsigned short) atoi(argv[2]);
+    int qid = atoi(argv[3]);
+    long mtype = atol(argv[4]);
     Socket * connection;
-    Queue<struct netMessage> * q;
+    Queue<struct msgAlmacen> * q;
+    struct msgAlmacen iMsg;
     struct netMessage msg;
     size_t bytes, expectedBytes = sizeof (msg);
 
     connection = new Socket("net-sender");
     connection->active(address, port);
-    q = new Queue<struct netMessage>(PATH, qid, "net-sender");
+    q = new Queue<struct msgAlmacen>(PATH, qid, "net-sender");
     q->get();
 
-    do
-    {
-        msg = q->receive(mtype);
+    do {
+        iMsg = q->receive(mtype);
+        msg.size = sizeof (iMsg);
+        memcpy(msg.message, &iMsg, msg.size);
         bytes = connection->send((char*) &msg, expectedBytes);
     } while (bytes == expectedBytes);
 
