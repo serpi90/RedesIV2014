@@ -1,12 +1,12 @@
 C++ = g++
-DFLAGS = -Wall -Wextra -ansi -pedantic-errors -g
+DFLAGS = -Wall -Wextra -ansi -g
 #OFLAGS = -O3
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
 COMPONENTES = 
 PROGRAMAS = productor encargadoDiscos encargadoProcesadores encargadoMotherboards
 LANZADORES = iniciador terminador lanzador
-CONECTIVIDAD = net-sender net-receiver net-controller net-idManager
+CONECTIVIDAD = net-sender net-receiver net-controller
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES) $(CONECTIVIDAD)
 
 IPC_CON_HEADER = Socket.o SemaphoreArray.o Semaphore.o
@@ -17,13 +17,16 @@ INTERFACES = iProductor.o iEncargado.o
 MODELO = 
 ACCESORIOS = Helper.o Config.o
 OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
-
-all: $(OBJS) $(PROGS) 
+RPC_CLIENT = RPC/idManager_clnt.o RPC/idManager_xdr.o
+all: rpc $(OBJS) $(PROGS)
 
 # Ejecutables
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Socket.o Queue.o includes.h Config.o Helper.o
-	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Socket.o Queue.o Config.o Helper.o
+rpc:
+	make -C RPC --no-print-directory
+
+$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Socket.o Queue.o includes.h Config.o Helper.o $(RPC_CLIENT)
+	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Socket.o Queue.o Config.o Helper.o $(RPC_CLIENT)
 
 $(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h Config.o
 	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
@@ -32,7 +35,7 @@ $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
 
 $(CONECTIVIDAD): %: %.cpp $(IPC) Config.o Helper.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
+	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o $(RPC_CLIENT)
 
 # Objetos
 
@@ -50,9 +53,7 @@ $(IPC_SIN_HEADER): %.o: %.cpp
 
 # Dependencias especificas
 
-net-controller: net-idManagerProtocol.h
-net-idManager: net-idManagerProtocol.h
-iEncargado.o: net-idManagerProtocol.h
+net-controller: $(RPC_CLIENT)
 productor: iProductor.o
 encargadoDiscos: iEncargado.o
 encargadoProcesadores: iEncargado.o
@@ -61,4 +62,5 @@ encargadoMotherboards: iEncargado.o
 # Limpieza
 
 clean:
-	rm -f *.o $(PROGS) ids.dat
+	rm -f *.o $(PROGS)
+	make -C RPC clean --no-print-directory

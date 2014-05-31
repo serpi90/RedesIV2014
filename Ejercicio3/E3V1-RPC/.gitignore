@@ -1,0 +1,13 @@
+iniciador
+lanzador
+terminador
+nbproject
+*.o
+almacen
+encargadoDiscos
+encargadoMotherboards
+encargadoProcesadores
+productor
+net-sender
+net-receiver
+net-controller
