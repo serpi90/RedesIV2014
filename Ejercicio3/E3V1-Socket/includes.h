@@ -6,8 +6,11 @@
 
 // IPC Definitions
 #define PATH "/home/knoppix/Maestri/Ejercicio3/E3V1"
-#define Q_FROM_INTERFACE_TO_NET 1
-#define Q_FROM_NET_TO_INTERFACE 2
+#define Q_FROM_INTERFACE_TO_CTL 1
+#define Q_FROM_CTL_TO_NET 2
+#define Q_FROM_NET_TO_INTERFACE 3
+
+#define SEM_MUTEX_IDM 1
 
 // Message Types
 #define M_CONS 1
