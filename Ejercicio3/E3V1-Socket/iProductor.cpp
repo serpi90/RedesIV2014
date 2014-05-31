@@ -5,7 +5,8 @@
 #include "Config.h"
 #include <sstream>
 
-iProductor::iProductor() {
+iProductor::iProductor()
+{
     std::stringstream ss;
     ss << "iProductor ";
     this->owner = ss.str();
@@ -20,7 +21,8 @@ iProductor::iProductor() {
     connection->active(address, port);
 }
 
-void iProductor::producirOrden(struct orden orden) {
+void iProductor::producirOrden(struct orden orden)
+{
 
     struct msgAlmacen msg;
     msg.orden = orden;
@@ -28,11 +30,13 @@ void iProductor::producirOrden(struct orden orden) {
     query.type = QUERY;
     connection->send((char*) &query, sizeof (query));
 
-    do {
+    do
+    {
         connection->receive((char*) &query, sizeof (query));
-        msg.type = query.response.info.mtype;
-        if (msg.type) {
+        msg.type = query.mtype.mtype;
+        if (msg.type)
+        {
             q->send(msg);
         }
-    } while (query.response.more);
+    } while (query.mtype.more);
 }

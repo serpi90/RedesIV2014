@@ -25,7 +25,7 @@ iEncargado::iEncargado(long numero)
     connection->receive((char*) &query, sizeof (query));
     connection->doClose();
 
-    this->id = query.response.info.mtype;
+    this->id = query.mtype.mtype;
     ss << " (" << this->id << ")";
     this->owner = ss.str();
     q = new Queue<struct msgAlmacen>(PATH, Q_FROM_NET_TO_INTERFACE, owner);

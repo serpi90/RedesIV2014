@@ -22,4 +22,5 @@ int main()
 
     system("pkill net-receiver");
     system("pkill net-idManager");
+    system("rm -f ids.dat");
 }

@@ -7,37 +7,52 @@
 #include "includes.h"
 #include <sstream>
 
-class IdManager {
+struct hostInfo
+{
+    char address[MAX_ADDRESS_LENGTH];
+    long mtype;
+};
+
+class IdManager
+{
 public:
 
-    IdManager(std::string filename) {
+    IdManager(std::string filename)
+    {
         this->filename = filename;
 
     }
 
-    struct hostInfo get(long mtype) {
-        struct hostInfo host;
+    char* get(long mtype)
+    {
+        static struct hostInfo host;
         FILE * file = fopen(filename.c_str(), "rb");
         host.mtype = 0;
-        if (file) {
-            do {
+        if (file)
+        {
+            do
+            {
                 fread(&host, sizeof (host), 1, file);
             } while (!feof(file) && host.mtype != mtype);
-            if (feof(file)) {
+            if (feof(file))
+            {
                 host.mtype = 0;
             }
             fclose(file);
         }
-        return host;
+        return (char*) host.address;
     }
 
-    long doRegister(char * address) {
+    long doRegister(char * address)
+    {
         long mtype = 1;
         struct hostInfo host;
         FILE * file;
         file = fopen(filename.c_str(), "rb");
-        if (file) {
-            do {
+        if (file)
+        {
+            do
+            {
                 fread(&host, sizeof (host), 1, file);
             } while (!feof(file) && host.mtype == mtype++);
             fclose(file);
@@ -51,43 +66,54 @@ public:
 
     }
 
-    struct hostInfo * query() {
-        struct hostInfo * list = NULL, host;
+    long * query()
+    {
+        struct hostInfo host;
+        long* list;
         unsigned length = 0, current = 0;
         ;
         FILE * file = fopen(filename.c_str(), "rb");
-        if (file) {
-            do {
+        if (file)
+        {
+            do
+            {
                 fread(&host, sizeof (host), 1, file);
-                if (!feof(file)) {
-                    if (current >= length) {
-                        if (length == 0) {
+                if (!feof(file))
+                {
+                    if (current >= length)
+                    {
+                        if (length == 0)
+                        {
                             length = 1;
-                            list = (struct hostInfo*) malloc(sizeof (struct hostInfo));
-                        } else {
+                            list = (long*) malloc(sizeof (long));
+                        } else
+                        {
                             length *= 2;
-                            list = (struct hostInfo*) realloc(list, sizeof (struct hostInfo) * length);
+                            list = (long*) realloc(list, sizeof (long) * length);
                         }
                     }
-                    list[current] = host;
+                    list[current] = host.mtype;
                     current++;
                 }
             } while (!feof(file));
             fclose(file);
         }
-        if (length) {
-            list = (struct hostInfo*) realloc(list, sizeof (struct hostInfo) *(current + 1));
-        } else {
-            list = (struct hostInfo*) malloc(sizeof (struct hostInfo));
+        if (length)
+        {
+            list = (long*) realloc(list, sizeof (long) *(current + 1));
+        } else
+        {
+            list = (long*) malloc(sizeof (long));
         }
-        list[current].mtype = 0;
+        list[current] = 0;
         return list;
     }
 private:
     std::string filename;
 };
 
-int main() {
+int main()
+{
     Config cfg("network.conf");
     unsigned short port = (unsigned short) cfg.getInt("id manager port", 6111);
     Socket * master, * connection;
@@ -95,61 +121,82 @@ int main() {
     struct idManagerMessage msg;
     size_t bytes, expectedBytes = sizeof (msg);
     char * address;
-    struct hostInfo * list = NULL;
+    long * list = NULL;
+    long mtype;
     std::stringstream ss;
     IdManager * idm;
+
+    // Prevent zombie processes.
+    struct sigaction sigchld_action;
+    sigchld_action.sa_handler = SIG_DFL;
+    sigchld_action.sa_flags = SA_NOCLDWAIT;
+    sigaction(SIGCHLD, &sigchld_action, NULL);
+
     idm = new IdManager("ids.dat");
 
     master = new Socket("net-idManager");
-    if (master->passive(port) == -1) {
+    if (master->passive(port) == -1)
+    {
         exit(EXIT_FAILURE);
     };
     Semaphore * mutex = new Semaphore(PATH, SEM_MUTEX_IDM, "idManager");
     mutex->get();
 
-    while (true) {
+    while (true)
+    {
         connection = master->doAccept();
-        if (connection == NULL) {
+        if (connection == NULL)
+        {
             Helper::output(stderr, "Error en accept.\n");
             exit(EXIT_FAILURE);
         }
         pid = fork();
-        if (pid < 0) {
+        if (pid < 0)
+        {
             perror("fork: net-idManag0er.");
-        } else if (pid == 0) {
-            do {
+        } else if (pid == 0)
+        {
+            do
+            {
                 bytes = connection->receive((char*) &msg, expectedBytes);
-                if (bytes == expectedBytes) {
+                if (bytes == expectedBytes)
+                {
                     mutex->wait();
-                    switch (msg.type) {
+                    switch (msg.type)
+                    {
                         case GET:
-                            msg.response.more = false;
-                            msg.response.info = idm->get(msg.response.info.mtype);
+                            msg.mtype.more = false;
+                            mtype = msg.mtype.mtype;
+                            memcpy(msg.address, idm->get(mtype), MAX_ADDRESS_LENGTH);
                             mutex->post();
                             ss.str("");
-                            ss << "idManager: GET " << msg.response.info.mtype << " " << msg.response.info.address << std::endl;
+                            ss << "idManager: GET " << mtype << ": " << msg.address << std::endl;
                             Helper::output(stdout, ss, GREEN);
                             connection->send((char*) &msg, sizeof (msg));
                             break;
                         case QUERY:
-                            msg.response.more = true;
+                            msg.mtype.more = true;
                             list = idm->query();
                             mutex->post();
+                            ss.str("");
                             ss << "idManager: QUERY " << std::endl;
-                            for (unsigned i = 0; msg.response.more; i++) {
-                                msg.response.info = list[i];
-                                if (list[i + 1].mtype == 0) {
-                                    msg.response.more = false;
+                            Helper::output(stdout, ss, BLUE);
+                            for (unsigned i = 0; msg.mtype.more; i++)
+                            {
+                                msg.mtype.mtype = list[i];
+                                if (list[i + 1] == 0)
+                                {
+                                    msg.mtype.more = false;
                                 }
                                 connection->send((char*) &msg, sizeof (msg));
                             }
                             break;
                         case REGISTER:
                             address = inet_ntoa(connection->getRemoteAddress());
-                            msg.response.info.mtype = idm->doRegister(address);
+                            msg.mtype.mtype = idm->doRegister(address);
                             mutex->post();
                             ss.str("");
-                            ss << "idManager: REGISTER " << address << " as " << msg.response.info.mtype << std::endl;
+                            ss << "idManager: REGISTER " << address << ": " << msg.mtype.mtype << std::endl;
                             Helper::output(stdout, ss, PURPLE);
                             connection->send((char*) &msg, sizeof (msg));
                             connection->doClose();
@@ -164,6 +211,9 @@ int main() {
             } while (bytes == expectedBytes);
             Helper::output(stdout, "net-idManager: connection ended");
             exit(EXIT_SUCCESS);
+        } else
+        {
+            connection->doClose();
         }
     }
     return 0;

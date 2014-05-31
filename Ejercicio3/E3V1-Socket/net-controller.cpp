@@ -15,15 +15,21 @@ int main()
 
     Socket * connection;
     struct idManagerMessage queryMsg;
-    std::list<struct hostInfo> hostList;
-    std::list<struct hostInfo>::iterator i;
+    std::list<long> hostList;
+    std::list<long>::iterator i;
     pid_t pid;
     std::stringstream ss;
     std::string qid, remotePort;
     Config cfg("network.conf");
-    struct hostInfo host;
     unsigned short port = (unsigned short) cfg.getInt("id manager port", 6111);
     std::string address = cfg.getString("id manager address", "localhost");
+
+    // Prevent zombie processes.
+    struct sigaction sigchld_action;
+    sigchld_action.sa_handler = SIG_DFL;
+    sigchld_action.sa_flags = SA_NOCLDWAIT;
+    sigaction(SIGCHLD, &sigchld_action, NULL);
+
 
     connection = new Socket("net-controller");
     connection->active(address, port);
@@ -40,15 +46,16 @@ int main()
     {
         msg = in->receive(0);
 
-        for (i = hostList.begin(); i != hostList.end() && i->mtype != msg.type; i++);
+        for (i = hostList.begin(); i != hostList.end() && *i != msg.type; i++);
         if (i == hostList.end())
         {
             queryMsg.type = GET;
+            queryMsg.mtype.mtype = msg.type;
             connection->send((char*) &queryMsg, sizeof (queryMsg));
             connection->receive((char*) &queryMsg, sizeof (queryMsg));
+            hostList.push_back(msg.type);
             ss.str("");
-            host = queryMsg.response.info;
-            ss << host.mtype;
+            ss << msg.type;
             pid = fork();
             if (pid < 0)
             {
@@ -56,7 +63,7 @@ int main()
                 exit(EXIT_FAILURE);
             } else if (pid == 0)
             {
-                execlp("./net-sender", "net-sender", host.address, remotePort.c_str(), qid.c_str(), ss.str().c_str(), NULL);
+                execlp("./net-sender", "net-sender", queryMsg.address, remotePort.c_str(), qid.c_str(), ss.str().c_str(), NULL);
                 perror("net-sender- execlp().");
                 exit(EXIT_FAILURE);
             }

@@ -3,24 +3,20 @@
 
 #define MAX_ADDRESS_LENGTH 256
 
-struct hostInfo {
-    char address[MAX_ADDRESS_LENGTH];
-    long mtype;
-};
-
 enum idManagerMessageType {
     REGISTER, QUERY, GET
 };
 
 struct idManagerMessage {
+    enum idManagerMessageType type;
 
     union {
-        enum idManagerMessageType type;
+        char address[MAX_ADDRESS_LENGTH];
 
         struct {
-            struct hostInfo info;
+            long mtype;
             bool more;
-        } response;
+        } mtype;
     };
 };
 
