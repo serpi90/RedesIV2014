@@ -1,7 +1,7 @@
 #include <sstream>
 #include <cstdio>
 #include "Helper.h"
-
+#include <unistd.h>
 void Helper::output(FILE* file, std::stringstream &ss, std::string colour)
 {
     output(file, ss.str(), colour);

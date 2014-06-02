@@ -1,5 +1,5 @@
 #include <sstream>
-
+#include <unistd.h>
 #include "Helper.h"
 
 void Helper::output(FILE* file, std::stringstream &ss)

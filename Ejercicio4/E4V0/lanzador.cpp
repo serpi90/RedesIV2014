@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstdio>
+#include <unistd.h>
 int main(int argc, char * argv[] )
 {
     std::stringstream ss;

@@ -1,5 +1,6 @@
 #include <sstream>
 #include <cstdio>
+#include <unistd.h>
 #include "Helper.h"
 
 void Helper::output(FILE* file, std::stringstream &ss, std::string colour)

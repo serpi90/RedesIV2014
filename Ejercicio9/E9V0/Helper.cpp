@@ -1,7 +1,7 @@
 #include <sstream>
 #include <cstdio>
 #include "Helper.h"
-
+#include <unistd.h>
 void Helper::output(FILE* file, std::stringstream &ss, std::string colour)
 {
     output(file, ss.str(), colour);
@@ -10,7 +10,8 @@ void Helper::output(FILE* file, std::stringstream &ss, std::string colour)
 
 void Helper::output(FILE* file, std::string s, std::string colour)
 {
-    s = colour + s + NORMAL;
+    s = colour + s 
++ NORMAL;
     if (write(fileno(file), s.c_str(), s.size()))
     {
     }
