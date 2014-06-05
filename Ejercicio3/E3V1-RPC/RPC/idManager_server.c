@@ -6,6 +6,7 @@
 
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <string.h>
 #include "idManager.h"
 
 struct hostInfo
@@ -22,7 +23,7 @@ register_1_svc(void *nothing, struct svc_req *rqstp)
     struct hostInfo host;
     FILE * file;
 
-    // find the next available mtype
+    /* find the next available mtype */
     file = fopen("ids.dat", "rb");
     if (file) {
         do {
@@ -31,7 +32,7 @@ register_1_svc(void *nothing, struct svc_req *rqstp)
         fclose(file);
     }
 
-    // add the mtype to the file
+    /* add the mtype to the file */
     file = fopen("ids.dat", "ab");
     strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), MAX_ADDRESS_LENGTH);
     host.mtype = mtype;

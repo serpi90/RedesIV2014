@@ -24,8 +24,11 @@ all: $(OBJS) $(PROGS)
 
 # Ejecutables
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
-	$(LINK.cpp) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o Interfaz.o
+escritor: escritor.cpp iEscritor.o $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
+	$(LINK.cpp) -o $@ $< $(CFLAGS) iEscritor.o Queue.o Config.o Helper.o Interfaz.o
+
+lector: lector.cpp iLector.o $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
+	$(LINK.cpp) -o $@ $< $(CFLAGS) iLector.o Queue.o Config.o Helper.o Interfaz.o
 
 $(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h Config.o
 	$(LINK.cpp) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o

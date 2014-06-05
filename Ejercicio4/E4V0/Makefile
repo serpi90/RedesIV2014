@@ -22,7 +22,7 @@ all: $(IPC) $(OBJS) $(PROGS) shmstat
 
 # Ejecutables
 
-shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o includes.h
+shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o includes.h
 	$(LINK.cpp) -o $@ $< $(CFLAGS) Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o
 
 $(PROGRAMAS): %: %.cpp $(INTERFACES) Queue.o Helper.o Config.o includes.h

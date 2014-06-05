@@ -4,7 +4,7 @@ DFLAGS = -Wall -Wextra -ansi -pedantic-errors
 #LFLAGS = -lpthread
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
 
-COMPONENTES = comp-sampler comp-analyzer shmstat
+COMPONENTES = comp-sampler comp-analyzer 
 PROGRAMAS = sampler analyzer
 LANZADORES = iniciador terminador lanzador
 PROGS = $(COMPONENTES) $(PROGRAMAS) $(LANZADORES)
@@ -18,7 +18,7 @@ MODELO = Sampler.o Analyzer.o
 ACCESORIOS = Helper.o Config.o
 OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
-all: $(OBJS) $(PROGS)
+all: $(OBJS) $(PROGS) shmstat
 
 .PHONY: all clean
 
@@ -32,6 +32,9 @@ $(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h
 
 $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 	$(LINK.cpp) -o $@ $< $(CFLAGS) $(IPC) Config.o
+
+shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o includes.h
+	$(LINK.cpp) -o $@ $< $(CFLAGS) Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o
 
 # Objetos
 

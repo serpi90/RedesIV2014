@@ -1,0 +1,4 @@
+*.o
+client_c
+client_cpp
+server

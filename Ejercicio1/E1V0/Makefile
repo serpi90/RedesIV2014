@@ -11,7 +11,7 @@ all: $(OBJS) $(PROGS)
 
 .PHONY: all clean
 
-$(PROGS): %: %.cpp $(IPC) includes.h
+$(PROGS): %: %.cpp $(IPC) $(OBJS) includes.h
 	$(LINK.cpp) -o $@ $< $(OBJS) $(CFLAGS)
 
 $(OBJS): %.o: %.cpp includes.h

@@ -24,14 +24,17 @@ all: $(OBJS) $(PROGS) shmstat
 
 # Ejecutables
 
-shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o includes.h
+shmstat: shmstat.cpp Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o includes.h
 	$(LINK.cpp) -o $@ $< $(CFLAGS) Semaphore.o SemaphoreArray.o SharedMemory.o Helper.o Config.o
 
-$(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h
+$(PROGRAMAS): %: %.cpp $(INTERFACES) $(ACCESORIOS) Queue.o includes.h
 	$(LINK.cpp) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Helper.o Config.o
 
-$(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h
-	$(LINK.cpp) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o 
+comp-puerta: comp-puerta.cpp Puerta.o $(IPC) Helper.o includes.h
+	$(LINK.cpp) -o $@ $< Puerta.o $(IPC) Helper.o $(CFLAGS)
+
+comp-cablecarril: comp-cablecarril.cpp CableCarril.o $(IPC) Helper.o includes.h
+	$(LINK.cpp) -o $@ $< $(IPC) CableCarril.o Helper.o $(CFLAGS)
 
 $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
 	$(LINK.cpp) -o $@ $< $(CFLAGS) $(IPC) Config.o
@@ -53,12 +56,6 @@ $(IPC_SIN_HEADER): %.o: %.cpp
 # Dependencias especificas
 
 Semaphore.o: SemaphoreArray.h
-
-puerta: iPuerta.o
-cablecarril: iCableCarril.o
-
-comp-puerta: Puerta.o
-comp-cablecarril: CableCarril.o
 
 # Limpieza
 
