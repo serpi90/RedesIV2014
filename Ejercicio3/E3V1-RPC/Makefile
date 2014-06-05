@@ -20,6 +20,8 @@ OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
 RPC_CLIENT = RPC/idManager_clnt.o RPC/idManager_xdr.o
 all: rpc $(OBJS) $(PROGS)
 
+.PHONY: rpc clean
+
 # Ejecutables
 
 rpc:

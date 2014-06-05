@@ -1,4 +1,3 @@
-C++ = g++
 DFLAGS = -Wall -g
 #OFLAGS = -O3
 CFLAGS = $(DFLAGS) $(OFLAGS) $(LFLAGS)
@@ -19,30 +18,32 @@ OBJS = $(IPC) $(INTERFACES) $(MODELO) $(ACCESORIOS)
 
 all: $(OBJS) $(PROGS)
 
+.PHONY: all clean
+
 # Ejecutables
 
 $(PROGRAMAS): %: %.cpp $(ACCESORIOS) Queue.o includes.h Config.o Helper.o
-	$(C++) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o
+	$(LINK.cpp) -o $@ $< $(CFLAGS) $(INTERFACES) Queue.o Config.o Helper.o
 
 $(COMPONENTES): %: %.cpp $(IPC) Helper.o includes.h Config.o
-	$(C++) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
+	$(LINK.cpp) -o $@ $< $(CFLAGS) $(MODELO) $(IPC) Helper.o Config.o
 
 $(LANZADORES): %: %.cpp $(IPC) Config.o includes.h
-	$(C++) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
+	$(LINK.cpp) -o $@ $< $(CFLAGS) $(IPC) Config.o Helper.o
 
 # Objetos
 
 $(MODELO): %.o: %.cpp %.h includes.h Helper.h Config.h
-	$(C++) -c -o $@ $< $(CFLAGS)
+	$(LINK.cpp) -c -o $@ $< $(CFLAGS)
 
 $(INTERFACES): %.o: %.cpp %.h includes.h Helper.h
-	$(C++) -c -o $@ $< $(CFLAGS)
+	$(LINK.cpp) -c -o $@ $< $(CFLAGS)
 
 $(IPC_CON_HEADER) $(ACCESORIOS): %.o: %.cpp %.h
-	$(C++) -c -o $@ $< $(CFLAGS)
+	$(LINK.cpp) -c -o $@ $< $(CFLAGS)
 
 $(IPC_SIN_HEADER): %.o: %.cpp
-	$(C++) -c -o $@ $< $(CFLAGS)
+	$(LINK.cpp) -c -o $@ $< $(CFLAGS)
 
 # Dependencias especificas
 
