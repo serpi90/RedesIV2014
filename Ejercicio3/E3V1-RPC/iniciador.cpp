@@ -15,10 +15,6 @@ int main()
     qa = new Queue<struct msgAlmacen>(PATH, Q_FROM_NET_TO_INTERFACE, "iniciador");
     qa->create();
 
-    Semaphore mutex(PATH, SEM_MUTEX_IDM, "iniciador");
-    mutex.create();
-    mutex.post();
-
     Config cfg("network.conf");
     std::string port = cfg.getString("consumidor port", "6112");
     std::stringstream ss;

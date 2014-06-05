@@ -16,10 +16,6 @@ int main()
     q->get();
     q->remove();
 
-    Semaphore mutex(PATH, SEM_MUTEX_IDM, "terminador", false);
-    mutex.get();
-    mutex.remove();
-
     system("pkill net-receiver");
     system("pkill net-idManager");
 }
