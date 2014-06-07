@@ -1,49 +1,31 @@
 #include "iEncargado.h"
 #include "includes.h"
 #include "Queue.cpp"
-#include "Config.h"
-#include "Socket.h"
 #include <sstream>
-#include "RPC/idManager.h"
 
-iEncargado::iEncargado(long numero)
+iEncargado::iEncargado(enum consummerType tipo)
 {
     std::stringstream ss;
-    this->numero = numero;
-    ss << "iEncargado " << this->numero;
-
-    Config cfg("network.conf");
-
-    std::string address = cfg.getString("id manager address", "localhost");
-
-    CLIENT *clnt;
-    registerResult *result_1;
-    char * register_1_arg;
-
-    clnt = clnt_create(address.c_str(), IDMANAGER, FIRST, "tcp");
-    if (clnt == NULL)
-    {
-        clnt_pcreateerror(address.c_str());
-        exit(EXIT_FAILURE);
-    }
-
-    result_1 = register_1(&register_1_arg, clnt);
-    if (result_1 == (registerResult *) NULL)
-    {
-        clnt_perror(clnt, "call failed");
-    }
-
-
-    this->id = result_1->registerResult_u.mtype;
-    ss << " (" << this->id << ")";
+    struct iMessage msg;
+    ss << "iEncargado ";
     this->owner = ss.str();
-    q = new Queue<struct msgAlmacen>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
-    q->get();
+
+    fromNet = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
+    fromNet->get();
+    toNet = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
+    toNet->get();
+
+    msg.mtype = M_CONS;
+    msg.query.query = REGISTER_CONSUMMER;
+    msg.query.type = tipo;
+    toNet->send(msg);
+    msg = fromNet->receive(M_CONS);
+    this->id = msg.query.id;
 }
 
 struct orden iEncargado::consumirOrden()
 {
-    struct msgAlmacen msg;
-    msg = q->receive(this->id);
+    struct iMessage msg;
+    msg = fromNet->receive(this->id);
     return msg.orden;
 }

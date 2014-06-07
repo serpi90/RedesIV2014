@@ -7,115 +7,332 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include "idManager.h"
+#include "../includes.h"
+#define FILENAME "ids.dat"
 
-struct hostInfo
-{
+enum kind {
+    PRODUCER,
+    CONSUMMER
+};
+
+struct hostInfo {
     char address[MAX_ADDRESS_LENGTH];
     long mtype;
 };
 
-registerResult *
-register_1_svc(void *nothing, struct svc_req *rqstp)
-{
-    static registerResult result;
-    long mtype = 1;
-    struct hostInfo host;
-    FILE * file;
+struct fileData {
+    long nextMtype;
+    struct hostInfo * producers, * disks, * processors, *motherboards;
+    unsigned amountProducers, amountDisks, amountProcessors, amountMotherboards;
+    unsigned lastDisk, lastProcesor, lastMotherboard;
+};
 
-    /* find the next available mtype */
-    file = fopen("ids.dat", "rb");
+struct fileData readFile(const char * filename) {
+    struct fileData data;
+    unsigned i;
+    FILE * file = fopen(filename, "rb");
     if (file) {
-        do {
-            fread(&host, sizeof (host), 1, file);
-        } while (!feof(file) && host.mtype == mtype++);
+        if (fread(&(data.nextMtype), sizeof (data.nextMtype), 1, file)) {
+
+            fread(&(data.amountProducers), sizeof (data.amountProducers), 1, file);
+
+            fread(&(data.amountDisks), sizeof (data.amountDisks), 1, file);
+            fread(&(data.lastDisk), sizeof (data.lastDisk), 1, file);
+
+            fread(&(data.amountProcessors), sizeof (data.amountProcessors), 1, file);
+            fread(&(data.lastProcesor), sizeof (data.lastProcesor), 1, file);
+
+            fread(&(data.amountMotherboards), sizeof (data.amountMotherboards), 1, file);
+            fread(&(data.lastMotherboard), sizeof (data.lastMotherboard), 1, file);
+
+            if (data.amountProducers) {
+                data.producers = malloc(sizeof (struct hostInfo) * data.amountProducers);
+                fread(data.producers, sizeof (struct hostInfo), data.amountProducers, file);
+            } else {
+                data.producers = NULL;
+            }
+
+            if (data.amountDisks) {
+                data.disks = malloc(sizeof (struct hostInfo) * data.amountDisks);
+                fread(data.disks, sizeof (struct hostInfo), data.amountDisks, file);
+            } else {
+                data.disks = NULL;
+            }
+
+            if (data.amountProcessors) {
+                data.processors = malloc(sizeof (struct hostInfo) * data.amountProcessors);
+                fread(data.processors, sizeof (struct hostInfo), data.amountProcessors, file);
+            } else {
+                data.processors = NULL;
+            }
+
+            if (data.amountMotherboards) {
+                data.motherboards = malloc(sizeof (struct hostInfo) * data.amountMotherboards);
+                fread(data.motherboards, sizeof (struct hostInfo), data.amountMotherboards, file);
+            } else {
+                data.motherboards = NULL;
+            }
+        } else {
+            bzero(&data, sizeof (data));
+            data.nextMtype = M_PROD + 1;
+        }
         fclose(file);
+    } else {
+        bzero(&data, sizeof (data));
+        data.nextMtype = M_PROD + 1;
     }
+    printf("N : %2ld PR: %2u\n", data.nextMtype, data.amountProducers);
+    printf("D : %2u P : %2u M : %2u\n", data.amountDisks, data.amountProcessors, data.amountMotherboards);
+    printf("LD: %2u LP: %2u LM: %2u\n", data.lastDisk, data.lastProcesor, data.lastMotherboard);
 
-    /* add the mtype to the file */
-    file = fopen("ids.dat", "ab");
-    strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), MAX_ADDRESS_LENGTH);
-    host.mtype = mtype;
-    fwrite(&host, sizeof (host), 1, file);
-    fclose(file);
+    for (i = 0; i < data.amountProducers; i++) {
+        printf("PR: %2ld %12s\n", data.producers[i].mtype, data.producers[i].address);
+    }
+    for (i = 0; i < data.amountDisks; i++) {
+        printf("D : %2ld %12s\n", data.disks[i].mtype, data.disks[i].address);
+    }
+    for (i = 0; i < data.amountProcessors; i++) {
+        printf("P : %2ld %12s\n", data.processors[i].mtype, data.processors[i].address);
+    }
+    for (i = 0; i < data.amountMotherboards; i++) {
+        printf("M : %2ld %12s\n", data.motherboards[i].mtype, data.motherboards[i].address);
+    }
+    return data;
+}
 
-    printf("REGISTER %3ld as %s\n", mtype, host.address);
+bool_t writeFile(const char * filename, struct fileData data) {
+    FILE * file = fopen(filename, "wb");
+
+    if (file) {
+        fwrite(&(data.nextMtype), sizeof (data.nextMtype), 1, file);
+        fwrite(&(data.amountProducers), sizeof (data.amountProducers), 1, file);
+        fwrite(&(data.amountDisks), sizeof (data.amountDisks), 1, file);
+        fwrite(&(data.lastDisk), sizeof (data.lastDisk), 1, file);
+        fwrite(&(data.amountProcessors), sizeof (data.amountProcessors), 1, file);
+        fwrite(&(data.lastProcesor), sizeof (data.lastProcesor), 1, file);
+        fwrite(&(data.amountMotherboards), sizeof (data.amountMotherboards), 1, file);
+        fwrite(&(data.lastMotherboard), sizeof (data.lastMotherboard), 1, file);
+        printf("write static done\n");
+        if (data.amountProducers) {
+            fwrite(data.producers, sizeof (struct hostInfo), data.amountProducers, file);
+        }
+        if (data.amountDisks) {
+            fwrite(data.disks, sizeof (struct hostInfo), data.amountDisks, file);
+        }
+        if (data.amountProcessors) {
+            fwrite(data.processors, sizeof (struct hostInfo), data.amountProcessors, file);
+        }
+        if (data.amountMotherboards) {
+            fwrite(data.motherboards, sizeof (struct hostInfo), data.amountMotherboards, file);
+        }
+        printf("write dynamic done\n");
+        fclose(file);
+    } else {
+        return FALSE;
+    }
+    printf("end write file\n");
+    return TRUE;
+}
+
+void clearData(struct fileData* dataPtr) {
+    printf("start clear\n");
+    dataPtr->nextMtype = M_CONS + 1;
+    if (dataPtr->producers) {
+        free(dataPtr->producers);
+    }
+    dataPtr->producers = (struct hostInfo*) NULL;
+    dataPtr->amountProducers = 0;
+    if (dataPtr->disks) {
+        free(dataPtr->disks);
+    }
+    dataPtr->disks = (struct hostInfo*) NULL;
+    dataPtr->amountDisks = 0;
+    dataPtr->lastDisk = 0;
+    if (dataPtr->processors) {
+        free(dataPtr->processors);
+    }
+    dataPtr->processors = (struct hostInfo*) NULL;
+    dataPtr->amountProcessors = 0;
+    dataPtr->lastProcesor = 0;
+    if (dataPtr->motherboards) {
+        free(dataPtr->motherboards);
+    }
+    dataPtr->motherboards = (struct hostInfo*) NULL;
+    dataPtr->motherboards = 0;
+    dataPtr->lastMotherboard = 0;
+    printf("end clear\n");
+
+}
+
+registerResult *
+register_consummer_1_svc(consummerType *type, struct svc_req *rqstp) {
+    static registerResult result;
+    char * ctype;
+    struct fileData data;
+    struct hostInfo host;
+
+    data = readFile(FILENAME);
+
+    host.mtype = data.nextMtype;
+    strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), sizeof (host.address));
+    switch (*type) {
+        case DISKS:
+            if (data.disks) {
+                data.disks = realloc(data.disks, (data.amountDisks + 1) * sizeof (struct hostInfo));
+            } else {
+                data.disks = malloc(sizeof (struct hostInfo));
+            }
+            data.disks[data.amountDisks++] = host;
+            ctype = "DISKS";
+            break;
+        case PROCCESSORS:
+            if (data.processors) {
+                data.processors = realloc(data.processors, (data.amountProcessors + 1) * sizeof (struct hostInfo));
+            } else {
+                data.processors = malloc(sizeof (struct hostInfo));
+            }
+            data.processors[data.amountProcessors++] = host;
+            ctype = "PROCESSORS";
+            break;
+        case MOTHERBOARDS:
+            if (data.motherboards) {
+                data.motherboards = realloc(data.motherboards, (data.amountMotherboards + 1) * sizeof (struct hostInfo));
+            } else {
+                data.motherboards = malloc(sizeof (struct hostInfo));
+            }
+            data.motherboards[data.amountMotherboards++] = host;
+            ctype = "MOTHERBOARDS";
+            break;
+        default:
+            result.cod_ret = -1;
+            result.registerResult_u.error = UNKNOWN_CONSUMMER_TYPE;
+            return &result;
+    }
+    result.registerResult_u.mtype = host.mtype;
+    data.nextMtype++;
+    if (!writeFile(FILENAME, data)) {
+        result.cod_ret = -1;
+        result.registerResult_u.error = FILE_ACCESS_FAILURE;
+        clearData(&data);
+        return &result;
+    }
     result.cod_ret = 0;
-    result.registerResult_u.mtype = mtype;
+    clearData(&data);
+
+    printf("REGISTER CONSUMMER %s as id %3ld from %s\n", ctype, host.mtype, host.address);
+
+    result.registerResult_u.mtype = host.mtype;
 
     return &result;
 }
 
 queryResult *
-query_1_svc(void *nothing, struct svc_req *rqstp)
-{
+query_consummers_1_svc(void *nothing, struct svc_req *rqstp) {
     static queryResult result;
-
-    struct hostInfo host;
-    long * list = NULL;
-    unsigned length = 0, current = 0;
-    printf("QUERY: ");
-    FILE * file = fopen("ids.dat", "rb");
-    if (file) {
-        do {
-            fread(&host, sizeof (host), 1, file);
-            if (!feof(file)) {
-                if (current >= length) {
-                    if (length == 0) {
-                        length = 1;
-                        list = (long*) malloc(sizeof (long));
-                    } else {
-                        length *= 2;
-                        list = (long*) realloc(list, sizeof (long) * length);
-                    }
-                }
-                list[current] = host.mtype;
-                current++;
-                printf("%3ld ", host.mtype);
-            }
-        } while (!feof(file));
-        fclose(file);
-        printf("\n");
-        if (length) {
-            list = (long*) realloc(list, sizeof (long) *(current));
-        }
+    struct fileData data = readFile(FILENAME);
+    if (data.amountDisks) {
+        result.queryResult_u.mtype[(unsigned) DISKS] = data.disks[data.lastDisk].mtype;
+        data.lastDisk = (data.lastDisk + 1) % data.amountDisks;
+    } else {
+        result.queryResult_u.mtype[(unsigned) DISKS] = 0;
     }
+    if (data.amountProcessors) {
+        result.queryResult_u.mtype[(unsigned) PROCCESSORS] = data.processors[data.lastProcesor].mtype;
+        data.lastProcesor = (data.lastProcesor + 1) % data.amountProcessors;
+    } else {
+        result.queryResult_u.mtype[(unsigned) PROCCESSORS] = 0;
+    }
+    if (data.amountMotherboards) {
+        result.queryResult_u.mtype[(unsigned) MOTHERBOARDS] = data.motherboards[data.lastMotherboard].mtype;
+        data.lastMotherboard = (data.lastMotherboard + 1) % data.amountMotherboards;
+    } else {
+        result.queryResult_u.mtype[(unsigned) MOTHERBOARDS] = 0;
+    }
+    if (!writeFile(FILENAME, data)) {
+        result.cod_ret = -1;
+        result.queryResult_u.error = FILE_ACCESS_FAILURE;
+        clearData(&data);
+        return &result;
+    }
+    clearData(&data);
     result.cod_ret = 0;
-    result.queryResult_u.mtype.mtype_len = current;
-    result.queryResult_u.mtype.mtype_val = list;
+    printf("QUERY: %ld %ld %ld\n", result.queryResult_u.mtype[0], result.queryResult_u.mtype[1], result.queryResult_u.mtype[2]);
 
     return &result;
 }
 
 getResult *
-get_1_svc(long *mtype, struct svc_req *rqstp)
-{
+get_1_svc(long *mtype, struct svc_req *rqstp) {
     static getResult result;
-
     static struct hostInfo host;
-    FILE * file = fopen("ids.dat", "rb");
+    unsigned i;
+    struct fileData data = readFile(FILENAME);
     host.mtype = 0;
-    if (file) {
-        do {
-            fread(&host, sizeof (host), 1, file);
-        } while (!feof(file) && host.mtype != *mtype);
-        if (feof(file)) {
-            host.mtype = 0;
+    for (i = 0; i < data.amountProducers && host.mtype == 0; i++) {
+        if (data.producers[i].mtype == *mtype) {
+            host = data.producers[i];
         }
-        fclose(file);
-
-        if (host.mtype) {
-            result.cod_ret = 0;
-            strncpy(result.getResult_u.address, host.address, MAX_ADDRESS_LENGTH);
-            printf("GET %3ld is %s\n", host.mtype, host.address);
-        } else {
-            result.cod_ret = -1;
-            result.getResult_u.error = INVIALID_ID;
+    }
+    for (i = 0; i < data.amountDisks && host.mtype == 0; i++) {
+        if (data.disks[i].mtype == *mtype) {
+            host = data.disks[i];
         }
+    }
+    for (i = 0; i < data.amountProcessors && host.mtype == 0; i++) {
+        if (data.processors[i].mtype == *mtype) {
+            host = data.processors[i];
+        }
+    }
+    for (i = 0; i < data.amountMotherboards && host.mtype == 0; i++) {
+        if (data.motherboards[i].mtype == *mtype) {
+            host = data.motherboards[i];
+        }
+    }
+    clearData(&data);
+    if (host.mtype) {
+        result.cod_ret = 0;
+        strncpy(result.getResult_u.address, host.address, MAX_ADDRESS_LENGTH);
+        printf("GET %3ld is %s\n", host.mtype, host.address);
     } else {
         result.cod_ret = -1;
-        result.getResult_u.error = FILE_ACCESS_FAILURE;
+        result.getResult_u.error = INVIALID_ID;
     }
+    return &result;
+}
+
+registerResult *
+register_producer_1_svc(void *nothing, struct svc_req *rqstp) {
+    static registerResult result;
+    struct fileData data;
+    struct hostInfo host;
+    data = readFile(FILENAME);
+    host.mtype = data.nextMtype;
+    strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), sizeof (host.address));
+    if (data.producers) {
+        data.producers = realloc(data.producers, (data.amountProducers + 1) * sizeof (struct hostInfo));
+    } else {
+        data.producers = malloc(sizeof (struct hostInfo));
+    }
+    data.producers[data.amountProducers++] = host;
+
+    result.registerResult_u.mtype = host.mtype;
+    data.nextMtype++;
+    printf("reg prod write\n");
+    if (!writeFile(FILENAME, data)) {
+        printf("reg prod wrote\n");
+        result.cod_ret = -1;
+        result.registerResult_u.error = FILE_ACCESS_FAILURE;
+        clearData(&data);
+        return &result;
+    }
+    result.cod_ret = 0;
+    clearData(&data);
+
+    printf("REGISTER PRODUCER as id %3ld from %s\n", host.mtype, host.address);
+
+    result.registerResult_u.mtype = host.mtype;
 
     return &result;
 }

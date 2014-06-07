@@ -1,18 +1,18 @@
 #ifndef IPRODUCTOR_H
 #define	IPRODUCTOR_H
 #include "Queue.cpp"
-#include "Socket.h"
+#include "includes.h"
 #include <string>
-#include "RPC/idManager.h"
 
 class iProductor {
 public:
     iProductor();
     void producirOrden(struct orden orden);
 private:
+    long id;
     std::string owner;
-    Queue<struct msgAlmacen> * q;
-    CLIENT *clnt;
+    Queue<struct iMessage> * toNet;
+    Queue<struct iMessage> * fromNet;
 };
 
 #endif	/* IPRODUCTOR_H */

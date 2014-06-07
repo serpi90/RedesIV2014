@@ -14,11 +14,11 @@ int main(int argc, char** argv) {
     int qid = atoi(argv[2]);
     Socket * master, * connection;
     pid_t pid;
-    Queue<struct msgAlmacen> * q;
+    Queue<struct iMessage> * q;
     struct netMessage msg;
     size_t bytes, expectedBytes = sizeof (msg);
-    struct msgAlmacen iMsg;
-    q = new Queue<struct msgAlmacen>(PATH, qid, "net-receiver");
+    struct iMessage iMsg;
+    q = new Queue<struct iMessage>(PATH, qid, "net-receiver");
     q->get();
     master = new Socket("net-receiver");
     master->passive(port);

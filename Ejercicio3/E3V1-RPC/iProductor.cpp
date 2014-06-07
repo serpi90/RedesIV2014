@@ -1,48 +1,59 @@
 #include "iProductor.h"
 #include "includes.h"
 #include "Queue.cpp"
-#include "Config.h"
+#include "Helper.h"
 #include <sstream>
 
 iProductor::iProductor()
 {
     std::stringstream ss;
+    struct iMessage msg;
     ss << "iProductor ";
     this->owner = ss.str();
-    q = new Queue<struct msgAlmacen>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
-    q->get();
-    Config cfg("network.conf");
 
-    std::string address = cfg.getString("id manager address", "localhost");
+    toNet = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
+    toNet->get();
+    fromNet = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
+    fromNet->get();
 
-    clnt = clnt_create(address.c_str(), IDMANAGER, FIRST, "tcp");
-    if (clnt == NULL)
-    {
-        clnt_pcreateerror(address.c_str());
-        exit(1);
-    }
+    msg.mtype = M_PROD;
+    msg.query.query = REGISTER_PRODUCER;
+    toNet->send(msg);
+    msg = fromNet->receive(M_PROD);
+    this->id = msg.query.id;
 }
 
 void iProductor::producirOrden(struct orden orden)
 {
 
-    struct msgAlmacen msg;
+    struct iMessage msg;
+    long consumidores[CANT_CONSUMIDORES];
+    bzero(consumidores, sizeof (consumidores));
+    // Preguntar a quienes hay que enviar las ordenes.
+    msg.mtype = M_PROD;
+    msg.query.id = id;
+    msg.query.query = QUERY_CONSUMMERS;
+    toNet->send(msg);
+    msg = fromNet->receive(msg.query.id);
+    memcpy(consumidores, msg.query.consumidores, sizeof (consumidores));
+
+    msg.mtype = M_CONS;
     msg.orden = orden;
-    queryResult *rpc_query_result;
-    char * rpc_query_1_arg = NULL;
 
-    rpc_query_result = query_1((void*) & rpc_query_1_arg, clnt);
-    if (rpc_query_result == (queryResult *) NULL)
+    for (unsigned i = 0; i < CANT_CONSUMIDORES; i++)
     {
-        clnt_perror(clnt, "call failed");
-    }
-
-    for (unsigned i = 0; i < rpc_query_result->queryResult_u.mtype.mtype_len; i++)
-    {
-        msg.type = rpc_query_result->queryResult_u.mtype.mtype_val[i];
-        if (msg.type)
+        if (consumidores[i] == 0)
         {
-            q->send(msg);
+            Helper::output(stderr, "No hay consumidores suficientes.", RED);
+            return;
+        }
+    }
+    for (unsigned i = 0; i < CANT_CONSUMIDORES; i++)
+    {
+        msg.mtype = consumidores[i];
+        if (msg.mtype)
+        {
+            toNet->send(msg);
         }
     }
 }

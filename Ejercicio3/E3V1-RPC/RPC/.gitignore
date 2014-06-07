@@ -1,4 +1,3 @@
-idManager_client.c
-idManager_server
-Makefile.idManager
-ids.dat
+idManager_svc.c
+idManager_xdr.c
+idManager_clnt.c
