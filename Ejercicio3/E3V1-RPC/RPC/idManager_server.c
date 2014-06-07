@@ -11,6 +11,7 @@
 #include "idManager.h"
 #include "../includes.h"
 #define FILENAME "ids.dat"
+#define HOST_KIND_AMOUNT (MAX_CONSUMMERS + 1)
 
 enum kind {
     PRODUCER,
@@ -22,58 +23,49 @@ struct hostInfo {
     long mtype;
 };
 
+struct hostArray {
+    unsigned amount;
+    unsigned lastUsed;
+    struct hostInfo * hosts;
+};
+
 struct fileData {
     long nextMtype;
-    struct hostInfo * producers, * disks, * processors, *motherboards;
-    unsigned amountProducers, amountDisks, amountProcessors, amountMotherboards;
-    unsigned lastDisk, lastProcesor, lastMotherboard;
+    struct hostArray producers, disks, processors, motherboards;
 };
+
+void addHost(struct hostArray *array, struct hostInfo host) {
+    if (array->hosts) {
+        array->hosts = realloc(array->hosts, (array->amount + 1) * sizeof (struct hostInfo));
+    } else {
+        array->hosts = malloc(sizeof (struct hostInfo));
+    }
+    array->hosts[array->amount++] = host;
+}
 
 struct fileData readFile(const char * filename) {
     struct fileData data;
     unsigned i;
+    struct hostArray temp[HOST_KIND_AMOUNT];
     FILE * file = fopen(filename, "rb");
     if (file) {
         if (fread(&(data.nextMtype), sizeof (data.nextMtype), 1, file)) {
-
-            fread(&(data.amountProducers), sizeof (data.amountProducers), 1, file);
-
-            fread(&(data.amountDisks), sizeof (data.amountDisks), 1, file);
-            fread(&(data.lastDisk), sizeof (data.lastDisk), 1, file);
-
-            fread(&(data.amountProcessors), sizeof (data.amountProcessors), 1, file);
-            fread(&(data.lastProcesor), sizeof (data.lastProcesor), 1, file);
-
-            fread(&(data.amountMotherboards), sizeof (data.amountMotherboards), 1, file);
-            fread(&(data.lastMotherboard), sizeof (data.lastMotherboard), 1, file);
-
-            if (data.amountProducers) {
-                data.producers = malloc(sizeof (struct hostInfo) * data.amountProducers);
-                fread(data.producers, sizeof (struct hostInfo), data.amountProducers, file);
-            } else {
-                data.producers = NULL;
+            for (i = 0; i < HOST_KIND_AMOUNT; i++) {
+                fread(&(temp[i].amount), sizeof (temp[i].amount), 1, file);
+                fread(&(temp[i].lastUsed), sizeof (temp[i].lastUsed), 1, file);
             }
-
-            if (data.amountDisks) {
-                data.disks = malloc(sizeof (struct hostInfo) * data.amountDisks);
-                fread(data.disks, sizeof (struct hostInfo), data.amountDisks, file);
-            } else {
-                data.disks = NULL;
+            for (i = 0; i < HOST_KIND_AMOUNT; i++) {
+                if (temp[i].amount) {
+                    temp[i].hosts = malloc(sizeof (struct hostInfo) * temp[i].amount);
+                    fread(temp[i].hosts, sizeof (struct hostInfo), temp[i].amount, file);
+                } else {
+                    temp[i].hosts = NULL;
+                }
             }
-
-            if (data.amountProcessors) {
-                data.processors = malloc(sizeof (struct hostInfo) * data.amountProcessors);
-                fread(data.processors, sizeof (struct hostInfo), data.amountProcessors, file);
-            } else {
-                data.processors = NULL;
-            }
-
-            if (data.amountMotherboards) {
-                data.motherboards = malloc(sizeof (struct hostInfo) * data.amountMotherboards);
-                fread(data.motherboards, sizeof (struct hostInfo), data.amountMotherboards, file);
-            } else {
-                data.motherboards = NULL;
-            }
+            data.producers = temp[0];
+            data.disks = temp[1];
+            data.processors = temp[2];
+            data.motherboards = temp[3];
         } else {
             bzero(&data, sizeof (data));
             data.nextMtype = M_PROD + 1;
@@ -83,87 +75,74 @@ struct fileData readFile(const char * filename) {
         bzero(&data, sizeof (data));
         data.nextMtype = M_PROD + 1;
     }
-    printf("N : %2ld PR: %2u\n", data.nextMtype, data.amountProducers);
-    printf("D : %2u P : %2u M : %2u\n", data.amountDisks, data.amountProcessors, data.amountMotherboards);
-    printf("LD: %2u LP: %2u LM: %2u\n", data.lastDisk, data.lastProcesor, data.lastMotherboard);
+    printf("N : %2ld PR: %2u\n", data.nextMtype, data.producers.amount);
+    printf("D : %2u P : %2u M : %2u\n", data.disks.amount, data.processors.amount, data.motherboards.amount);
+    printf("LD: %2u LP: %2u LM: %2u\n", data.disks.lastUsed, data.processors.lastUsed, data.motherboards.lastUsed);
 
-    for (i = 0; i < data.amountProducers; i++) {
-        printf("PR: %2ld %12s\n", data.producers[i].mtype, data.producers[i].address);
+    for (i = 0; i < data.producers.amount; i++) {
+        printf("PR: %2ld %12s\n", data.producers.hosts[i].mtype, data.producers.hosts[i].address);
     }
-    for (i = 0; i < data.amountDisks; i++) {
-        printf("D : %2ld %12s\n", data.disks[i].mtype, data.disks[i].address);
+    for (i = 0; i < data.disks.amount; i++) {
+        printf("D : %2ld %12s\n", data.disks.hosts[i].mtype, data.disks.hosts[i].address);
     }
-    for (i = 0; i < data.amountProcessors; i++) {
-        printf("P : %2ld %12s\n", data.processors[i].mtype, data.processors[i].address);
+    for (i = 0; i < data.processors.amount; i++) {
+        printf("P : %2ld %12s\n", data.processors.hosts[i].mtype, data.processors.hosts[i].address);
     }
-    for (i = 0; i < data.amountMotherboards; i++) {
-        printf("M : %2ld %12s\n", data.motherboards[i].mtype, data.motherboards[i].address);
+    for (i = 0; i < data.motherboards.amount; i++) {
+
+        printf("M : %2ld %12s\n", data.motherboards.hosts[i].mtype, data.motherboards.hosts[i].address);
     }
     return data;
 }
 
 bool_t writeFile(const char * filename, struct fileData data) {
     FILE * file = fopen(filename, "wb");
-
+    struct hostArray temp[HOST_KIND_AMOUNT];
+    unsigned i;
+    temp[0] = data.producers;
+    temp[1] = data.disks;
+    temp[2] = data.processors;
+    temp[3] = data.motherboards;
     if (file) {
         fwrite(&(data.nextMtype), sizeof (data.nextMtype), 1, file);
-        fwrite(&(data.amountProducers), sizeof (data.amountProducers), 1, file);
-        fwrite(&(data.amountDisks), sizeof (data.amountDisks), 1, file);
-        fwrite(&(data.lastDisk), sizeof (data.lastDisk), 1, file);
-        fwrite(&(data.amountProcessors), sizeof (data.amountProcessors), 1, file);
-        fwrite(&(data.lastProcesor), sizeof (data.lastProcesor), 1, file);
-        fwrite(&(data.amountMotherboards), sizeof (data.amountMotherboards), 1, file);
-        fwrite(&(data.lastMotherboard), sizeof (data.lastMotherboard), 1, file);
-        printf("write static done\n");
-        if (data.amountProducers) {
-            fwrite(data.producers, sizeof (struct hostInfo), data.amountProducers, file);
+        for (i = 0; i < HOST_KIND_AMOUNT; i++) {
+            fwrite(&(temp[i].amount), sizeof (temp[i].amount), 1, file);
+            fwrite(&(temp[i].lastUsed), sizeof (temp[i].lastUsed), 1, file);
         }
-        if (data.amountDisks) {
-            fwrite(data.disks, sizeof (struct hostInfo), data.amountDisks, file);
+        for (i = 0; i < HOST_KIND_AMOUNT; i++) {
+            if (temp[i].amount) {
+
+                fwrite(temp[i].hosts, sizeof (struct hostInfo), temp[i].amount, file);
+            }
         }
-        if (data.amountProcessors) {
-            fwrite(data.processors, sizeof (struct hostInfo), data.amountProcessors, file);
-        }
-        if (data.amountMotherboards) {
-            fwrite(data.motherboards, sizeof (struct hostInfo), data.amountMotherboards, file);
-        }
-        printf("write dynamic done\n");
         fclose(file);
     } else {
         return FALSE;
     }
-    printf("end write file\n");
     return TRUE;
 }
 
 void clearData(struct fileData* dataPtr) {
-    printf("start clear\n");
-    dataPtr->nextMtype = M_CONS + 1;
-    if (dataPtr->producers) {
-        free(dataPtr->producers);
-    }
-    dataPtr->producers = (struct hostInfo*) NULL;
-    dataPtr->amountProducers = 0;
-    if (dataPtr->disks) {
-        free(dataPtr->disks);
-    }
-    dataPtr->disks = (struct hostInfo*) NULL;
-    dataPtr->amountDisks = 0;
-    dataPtr->lastDisk = 0;
-    if (dataPtr->processors) {
-        free(dataPtr->processors);
-    }
-    dataPtr->processors = (struct hostInfo*) NULL;
-    dataPtr->amountProcessors = 0;
-    dataPtr->lastProcesor = 0;
-    if (dataPtr->motherboards) {
-        free(dataPtr->motherboards);
-    }
-    dataPtr->motherboards = (struct hostInfo*) NULL;
-    dataPtr->motherboards = 0;
-    dataPtr->lastMotherboard = 0;
-    printf("end clear\n");
+    struct hostArray temp[HOST_KIND_AMOUNT];
+    unsigned i;
+    temp[0] = dataPtr->producers;
+    temp[1] = dataPtr->disks;
+    temp[2] = dataPtr->processors;
+    temp[3] = dataPtr->motherboards;
 
+    dataPtr->nextMtype = M_CONS + 1;
+    for (i = 0; i < HOST_KIND_AMOUNT; i++) {
+        if (temp[i].hosts) {
+            free(temp[i].hosts);
+        }
+        temp[i].hosts = (struct hostInfo*) NULL;
+        temp[i].amount = 0;
+        temp[i].lastUsed = 0;
+    }
+    dataPtr->producers = temp[0];
+    dataPtr->disks = temp[1];
+    dataPtr->processors = temp[2];
+    dataPtr->motherboards = temp[3];
 }
 
 registerResult *
@@ -179,30 +158,15 @@ register_consummer_1_svc(consummerType *type, struct svc_req *rqstp) {
     strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), sizeof (host.address));
     switch (*type) {
         case DISKS:
-            if (data.disks) {
-                data.disks = realloc(data.disks, (data.amountDisks + 1) * sizeof (struct hostInfo));
-            } else {
-                data.disks = malloc(sizeof (struct hostInfo));
-            }
-            data.disks[data.amountDisks++] = host;
+            addHost(&(data.disks), host);
             ctype = "DISKS";
             break;
         case PROCCESSORS:
-            if (data.processors) {
-                data.processors = realloc(data.processors, (data.amountProcessors + 1) * sizeof (struct hostInfo));
-            } else {
-                data.processors = malloc(sizeof (struct hostInfo));
-            }
-            data.processors[data.amountProcessors++] = host;
+            addHost(&(data.processors), host);
             ctype = "PROCESSORS";
             break;
         case MOTHERBOARDS:
-            if (data.motherboards) {
-                data.motherboards = realloc(data.motherboards, (data.amountMotherboards + 1) * sizeof (struct hostInfo));
-            } else {
-                data.motherboards = malloc(sizeof (struct hostInfo));
-            }
-            data.motherboards[data.amountMotherboards++] = host;
+            addHost(&(data.motherboards), host);
             ctype = "MOTHERBOARDS";
             break;
         default:
@@ -232,24 +196,25 @@ queryResult *
 query_consummers_1_svc(void *nothing, struct svc_req *rqstp) {
     static queryResult result;
     struct fileData data = readFile(FILENAME);
-    if (data.amountDisks) {
-        result.queryResult_u.mtype[(unsigned) DISKS] = data.disks[data.lastDisk].mtype;
-        data.lastDisk = (data.lastDisk + 1) % data.amountDisks;
-    } else {
-        result.queryResult_u.mtype[(unsigned) DISKS] = 0;
+    struct hostArray arrs[MAX_CONSUMMERS];
+    unsigned idx[MAX_CONSUMMERS], i;
+    idx[0] = (unsigned) DISKS;
+    arrs[0] = data.disks;
+    idx[1] = (unsigned) PROCCESSORS;
+    arrs[1] = data.processors;
+    idx[2] = (unsigned) MOTHERBOARDS;
+    arrs[2] = data.motherboards;
+    for (i = 0; i < MAX_CONSUMMERS; i++) {
+        if (arrs[i].amount) {
+            result.queryResult_u.mtype[idx[i]] = arrs[i].hosts[arrs[i].lastUsed].mtype;
+            arrs[i].lastUsed = (arrs[i].lastUsed + 1) % arrs[i].amount;
+        } else {
+            result.queryResult_u.mtype[idx[i]] = 0;
+        }
     }
-    if (data.amountProcessors) {
-        result.queryResult_u.mtype[(unsigned) PROCCESSORS] = data.processors[data.lastProcesor].mtype;
-        data.lastProcesor = (data.lastProcesor + 1) % data.amountProcessors;
-    } else {
-        result.queryResult_u.mtype[(unsigned) PROCCESSORS] = 0;
-    }
-    if (data.amountMotherboards) {
-        result.queryResult_u.mtype[(unsigned) MOTHERBOARDS] = data.motherboards[data.lastMotherboard].mtype;
-        data.lastMotherboard = (data.lastMotherboard + 1) % data.amountMotherboards;
-    } else {
-        result.queryResult_u.mtype[(unsigned) MOTHERBOARDS] = 0;
-    }
+    data.disks = arrs[0];
+    data.processors = arrs[1];
+    data.motherboards = arrs[2];
     if (!writeFile(FILENAME, data)) {
         result.cod_ret = -1;
         result.queryResult_u.error = FILE_ACCESS_FAILURE;
@@ -267,27 +232,19 @@ getResult *
 get_1_svc(long *mtype, struct svc_req *rqstp) {
     static getResult result;
     static struct hostInfo host;
-    unsigned i;
+    unsigned i, j;
     struct fileData data = readFile(FILENAME);
+    struct hostArray temp[HOST_KIND_AMOUNT];
+    temp[0] = data.producers;
+    temp[1] = data.disks;
+    temp[2] = data.processors;
+    temp[3] = data.motherboards;
     host.mtype = 0;
-    for (i = 0; i < data.amountProducers && host.mtype == 0; i++) {
-        if (data.producers[i].mtype == *mtype) {
-            host = data.producers[i];
-        }
-    }
-    for (i = 0; i < data.amountDisks && host.mtype == 0; i++) {
-        if (data.disks[i].mtype == *mtype) {
-            host = data.disks[i];
-        }
-    }
-    for (i = 0; i < data.amountProcessors && host.mtype == 0; i++) {
-        if (data.processors[i].mtype == *mtype) {
-            host = data.processors[i];
-        }
-    }
-    for (i = 0; i < data.amountMotherboards && host.mtype == 0; i++) {
-        if (data.motherboards[i].mtype == *mtype) {
-            host = data.motherboards[i];
+    for (i = 0; i < HOST_KIND_AMOUNT && host.mtype == 0; i++) {
+        for (j = 0; j < temp[i].amount && host.mtype == 0; j++) {
+            if (temp[i].hosts[j].mtype == *mtype) {
+                host = temp[i].hosts[j];
+            }
         }
     }
     clearData(&data);
@@ -296,6 +253,7 @@ get_1_svc(long *mtype, struct svc_req *rqstp) {
         strncpy(result.getResult_u.address, host.address, MAX_ADDRESS_LENGTH);
         printf("GET %3ld is %s\n", host.mtype, host.address);
     } else {
+
         result.cod_ret = -1;
         result.getResult_u.error = INVIALID_ID;
     }
@@ -310,18 +268,11 @@ register_producer_1_svc(void *nothing, struct svc_req *rqstp) {
     data = readFile(FILENAME);
     host.mtype = data.nextMtype;
     strncpy(host.address, inet_ntoa(rqstp->rq_xprt->xp_raddr.sin_addr), sizeof (host.address));
-    if (data.producers) {
-        data.producers = realloc(data.producers, (data.amountProducers + 1) * sizeof (struct hostInfo));
-    } else {
-        data.producers = malloc(sizeof (struct hostInfo));
-    }
-    data.producers[data.amountProducers++] = host;
+    addHost(&(data.producers), host);
 
     result.registerResult_u.mtype = host.mtype;
     data.nextMtype++;
-    printf("reg prod write\n");
     if (!writeFile(FILENAME, data)) {
-        printf("reg prod wrote\n");
         result.cod_ret = -1;
         result.registerResult_u.error = FILE_ACCESS_FAILURE;
         clearData(&data);
