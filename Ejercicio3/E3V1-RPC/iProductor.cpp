@@ -4,8 +4,7 @@
 #include "Helper.h"
 #include <sstream>
 
-iProductor::iProductor()
-{
+iProductor::iProductor() {
     std::stringstream ss;
     struct iMessage msg;
     ss << "iProductor ";
@@ -23,37 +22,33 @@ iProductor::iProductor()
     this->id = msg.query.id;
 }
 
-void iProductor::producirOrden(struct orden orden)
-{
+void iProductor::producirOrden(struct orden orden) {
 
     struct iMessage msg;
-    long consumidores[CANT_CONSUMIDORES];
-    bzero(consumidores, sizeof (consumidores));
+    struct mtypes consumidores;
+    consumidores.disks = 0;
+    consumidores.motherboards = 0;
+    consumidores.processors = 0;
     // Preguntar a quienes hay que enviar las ordenes.
     msg.mtype = M_PROD;
     msg.query.id = id;
     msg.query.query = QUERY_CONSUMMERS;
     toNet->send(msg);
     msg = fromNet->receive(msg.query.id);
-    memcpy(consumidores, msg.query.consumidores, sizeof (consumidores));
+    consumidores = msg.query.consumidores;
 
     msg.mtype = M_CONS;
     msg.orden = orden;
 
-    for (unsigned i = 0; i < CANT_CONSUMIDORES; i++)
-    {
-        if (consumidores[i] == 0)
-        {
-            Helper::output(stderr, "No hay consumidores suficientes.", RED);
-            return;
-        }
+    if (consumidores.disks == 0 || consumidores.processors == 0 || consumidores.motherboards == 0) {
+        Helper::output(stderr, "No hay consumidores suficientes.", RED);
+        return;
     }
-    for (unsigned i = 0; i < CANT_CONSUMIDORES; i++)
-    {
-        msg.mtype = consumidores[i];
-        if (msg.mtype)
-        {
-            toNet->send(msg);
-        }
-    }
+
+    msg.mtype = consumidores.disks;
+    toNet->send(msg);
+    msg.mtype = consumidores.processors;
+    toNet->send(msg);
+    msg.mtype = consumidores.motherboards;
+    toNet->send(msg);
 }

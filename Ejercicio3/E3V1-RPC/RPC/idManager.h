@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #define MAX_ADDRESS_LENGTH 16
-#define MAX_CONSUMMERS 3
+#define CONSUMMER_KIND_AMOUNT 3
 
 enum consummerType {
 	DISKS = 0,
@@ -39,10 +39,17 @@ struct registerResult {
 };
 typedef struct registerResult registerResult;
 
+struct mtypes {
+	long disks;
+	long processors;
+	long motherboards;
+};
+typedef struct mtypes mtypes;
+
 struct queryResult {
 	int cod_ret;
 	union {
-		long mtype[MAX_CONSUMMERS];
+		struct mtypes mtypes;
 		enum errorCodes error;
 	} queryResult_u;
 };
@@ -97,6 +104,7 @@ extern int idmanager_1_freeresult ();
 extern  bool_t xdr_consummerType (XDR *, consummerType*);
 extern  bool_t xdr_errorCodes (XDR *, errorCodes*);
 extern  bool_t xdr_registerResult (XDR *, registerResult*);
+extern  bool_t xdr_mtypes (XDR *, mtypes*);
 extern  bool_t xdr_queryResult (XDR *, queryResult*);
 extern  bool_t xdr_getResult (XDR *, getResult*);
 
@@ -104,6 +112,7 @@ extern  bool_t xdr_getResult (XDR *, getResult*);
 extern bool_t xdr_consummerType ();
 extern bool_t xdr_errorCodes ();
 extern bool_t xdr_registerResult ();
+extern bool_t xdr_mtypes ();
 extern bool_t xdr_queryResult ();
 extern bool_t xdr_getResult ();
 

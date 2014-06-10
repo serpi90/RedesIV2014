@@ -1,5 +1,5 @@
 const MAX_ADDRESS_LENGTH = 16;
-const MAX_CONSUMMERS = 3;
+const CONSUMMER_KIND_AMOUNT = 3;
 
 enum consummerType{
     DISKS=0,
@@ -19,8 +19,14 @@ union registerResult switch(int cod_ret) {
 	default: void;
 };
 
+struct mtypes {
+    long disks;
+    long processors;
+    long motherboards;
+};
+
 union queryResult switch(int cod_ret) {
-	case 0: long mtype[MAX_CONSUMMERS]; 
+	case 0: struct mtypes mtypes;
 	case -1: enum errorCodes error;
 	default: void;
 };

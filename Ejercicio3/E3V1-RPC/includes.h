@@ -34,7 +34,7 @@ struct iMessage {
 
             union {
                 long id;
-                long consumidores[CANT_CONSUMIDORES];
+                struct mtypes consumidores;
                 enum consummerType type;
             };
         } query;

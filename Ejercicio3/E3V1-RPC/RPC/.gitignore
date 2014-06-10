@@ -1,3 +1,6 @@
 idManager_svc.c
 idManager_xdr.c
 idManager_clnt.c
+ids.dat
+*.o
+idManager_server

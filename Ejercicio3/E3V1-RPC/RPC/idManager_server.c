@@ -11,12 +11,7 @@
 #include "idManager.h"
 #include "../includes.h"
 #define FILENAME "ids.dat"
-#define HOST_KIND_AMOUNT (MAX_CONSUMMERS + 1)
-
-enum kind {
-    PRODUCER,
-    CONSUMMER
-};
+#define HOST_KIND_AMOUNT (CONSUMMER_KIND_AMOUNT + 1)
 
 struct hostInfo {
     char address[MAX_ADDRESS_LENGTH];
@@ -33,6 +28,20 @@ struct fileData {
     long nextMtype;
     struct hostArray producers, disks, processors, motherboards;
 };
+
+void data2array(struct fileData * data, struct hostArray arr[4]) {
+    arr[0] = data->producers;
+    arr[1] = data->disks;
+    arr[2] = data->processors;
+    arr[3] = data->motherboards;
+}
+
+void array2data(struct fileData * data, struct hostArray arr[4]) {
+    data->producers = arr[0];
+    data->disks = arr[1];
+    data->processors = arr[2];
+    data->motherboards = arr[3];
+}
 
 void addHost(struct hostArray *array, struct hostInfo host) {
     if (array->hosts) {
@@ -62,10 +71,7 @@ struct fileData readFile(const char * filename) {
                     temp[i].hosts = NULL;
                 }
             }
-            data.producers = temp[0];
-            data.disks = temp[1];
-            data.processors = temp[2];
-            data.motherboards = temp[3];
+            array2data(&data, temp);
         } else {
             bzero(&data, sizeof (data));
             data.nextMtype = M_PROD + 1;
@@ -75,23 +81,6 @@ struct fileData readFile(const char * filename) {
         bzero(&data, sizeof (data));
         data.nextMtype = M_PROD + 1;
     }
-    printf("N : %2ld PR: %2u\n", data.nextMtype, data.producers.amount);
-    printf("D : %2u P : %2u M : %2u\n", data.disks.amount, data.processors.amount, data.motherboards.amount);
-    printf("LD: %2u LP: %2u LM: %2u\n", data.disks.lastUsed, data.processors.lastUsed, data.motherboards.lastUsed);
-
-    for (i = 0; i < data.producers.amount; i++) {
-        printf("PR: %2ld %12s\n", data.producers.hosts[i].mtype, data.producers.hosts[i].address);
-    }
-    for (i = 0; i < data.disks.amount; i++) {
-        printf("D : %2ld %12s\n", data.disks.hosts[i].mtype, data.disks.hosts[i].address);
-    }
-    for (i = 0; i < data.processors.amount; i++) {
-        printf("P : %2ld %12s\n", data.processors.hosts[i].mtype, data.processors.hosts[i].address);
-    }
-    for (i = 0; i < data.motherboards.amount; i++) {
-
-        printf("M : %2ld %12s\n", data.motherboards.hosts[i].mtype, data.motherboards.hosts[i].address);
-    }
     return data;
 }
 
@@ -99,10 +88,7 @@ bool_t writeFile(const char * filename, struct fileData data) {
     FILE * file = fopen(filename, "wb");
     struct hostArray temp[HOST_KIND_AMOUNT];
     unsigned i;
-    temp[0] = data.producers;
-    temp[1] = data.disks;
-    temp[2] = data.processors;
-    temp[3] = data.motherboards;
+    data2array(&data, temp);
     if (file) {
         fwrite(&(data.nextMtype), sizeof (data.nextMtype), 1, file);
         for (i = 0; i < HOST_KIND_AMOUNT; i++) {
@@ -125,10 +111,7 @@ bool_t writeFile(const char * filename, struct fileData data) {
 void clearData(struct fileData* dataPtr) {
     struct hostArray temp[HOST_KIND_AMOUNT];
     unsigned i;
-    temp[0] = dataPtr->producers;
-    temp[1] = dataPtr->disks;
-    temp[2] = dataPtr->processors;
-    temp[3] = dataPtr->motherboards;
+    data2array(dataPtr, temp);
 
     dataPtr->nextMtype = M_CONS + 1;
     for (i = 0; i < HOST_KIND_AMOUNT; i++) {
@@ -139,10 +122,7 @@ void clearData(struct fileData* dataPtr) {
         temp[i].amount = 0;
         temp[i].lastUsed = 0;
     }
-    dataPtr->producers = temp[0];
-    dataPtr->disks = temp[1];
-    dataPtr->processors = temp[2];
-    dataPtr->motherboards = temp[3];
+    array2data(dataPtr, temp);
 }
 
 registerResult *
@@ -186,9 +166,6 @@ register_consummer_1_svc(consummerType *type, struct svc_req *rqstp) {
     clearData(&data);
 
     printf("REGISTER CONSUMMER %s as id %3ld from %s\n", ctype, host.mtype, host.address);
-
-    result.registerResult_u.mtype = host.mtype;
-
     return &result;
 }
 
@@ -196,25 +173,18 @@ queryResult *
 query_consummers_1_svc(void *nothing, struct svc_req *rqstp) {
     static queryResult result;
     struct fileData data = readFile(FILENAME);
-    struct hostArray arrs[MAX_CONSUMMERS];
-    unsigned idx[MAX_CONSUMMERS], i;
-    idx[0] = (unsigned) DISKS;
-    arrs[0] = data.disks;
-    idx[1] = (unsigned) PROCCESSORS;
-    arrs[1] = data.processors;
-    idx[2] = (unsigned) MOTHERBOARDS;
-    arrs[2] = data.motherboards;
-    for (i = 0; i < MAX_CONSUMMERS; i++) {
-        if (arrs[i].amount) {
-            result.queryResult_u.mtype[idx[i]] = arrs[i].hosts[arrs[i].lastUsed].mtype;
-            arrs[i].lastUsed = (arrs[i].lastUsed + 1) % arrs[i].amount;
-        } else {
-            result.queryResult_u.mtype[idx[i]] = 0;
-        }
+    if (data.disks.amount) {
+        result.queryResult_u.mtypes.disks = data.disks.hosts[data.disks.lastUsed].mtype;
+        data.disks.lastUsed = (data.disks.lastUsed + 1) % data.disks.amount;
     }
-    data.disks = arrs[0];
-    data.processors = arrs[1];
-    data.motherboards = arrs[2];
+    if (data.processors.amount) {
+        result.queryResult_u.mtypes.processors = data.processors.hosts[data.processors.lastUsed].mtype;
+        data.processors.lastUsed = (data.processors.lastUsed + 1) % data.processors.amount;
+    }
+    if (data.motherboards.amount) {
+        result.queryResult_u.mtypes.motherboards = data.motherboards.hosts[data.motherboards.lastUsed].mtype;
+        data.motherboards.lastUsed = (data.motherboards.lastUsed + 1) % data.motherboards.amount;
+    }
     if (!writeFile(FILENAME, data)) {
         result.cod_ret = -1;
         result.queryResult_u.error = FILE_ACCESS_FAILURE;
@@ -223,7 +193,7 @@ query_consummers_1_svc(void *nothing, struct svc_req *rqstp) {
     }
     clearData(&data);
     result.cod_ret = 0;
-    printf("QUERY: %ld %ld %ld\n", result.queryResult_u.mtype[0], result.queryResult_u.mtype[1], result.queryResult_u.mtype[2]);
+    printf("QUERY: %ld %ld %ld\n", result.queryResult_u.mtypes.disks, result.queryResult_u.mtypes.processors, result.queryResult_u.mtypes.motherboards);
 
     return &result;
 }
@@ -235,10 +205,7 @@ get_1_svc(long *mtype, struct svc_req *rqstp) {
     unsigned i, j;
     struct fileData data = readFile(FILENAME);
     struct hostArray temp[HOST_KIND_AMOUNT];
-    temp[0] = data.producers;
-    temp[1] = data.disks;
-    temp[2] = data.processors;
-    temp[3] = data.motherboards;
+    data2array(&data, temp);
     host.mtype = 0;
     for (i = 0; i < HOST_KIND_AMOUNT && host.mtype == 0; i++) {
         for (j = 0; j < temp[i].amount && host.mtype == 0; j++) {

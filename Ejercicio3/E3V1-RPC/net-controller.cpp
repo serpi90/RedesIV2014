@@ -8,8 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int main()
-{
+int main() {
     Queue<struct iMessage> * fromInterface;
     Queue<struct iMessage> * toNet;
     Queue<struct iMessage> * toInterface;
@@ -29,8 +28,7 @@ int main()
 
     std::string address = cfg.getString("id manager address", "localhost");
     clnt = clnt_create(address.c_str(), IDMANAGER, FIRST, "tcp");
-    if (clnt == NULL)
-    {
+    if (clnt == NULL) {
         clnt_pcreateerror(address.c_str());
         exit(1);
     }
@@ -46,18 +44,14 @@ int main()
     toInterface = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, "net-sender");
     toInterface->get();
 
-    while (true)
-    {
+    while (true) {
         msg = fromInterface->receive(M_ANY);
-        switch (msg.mtype)
-        {
+        switch (msg.mtype) {
             case M_PROD:
-                switch (msg.query.query)
-                {
+                switch (msg.query.query) {
                     case REGISTER_PRODUCER:
                         rpc_register_result = register_producer_1((void*) NULL, clnt);
-                        if (rpc_register_result == (registerResult *) NULL)
-                        {
+                        if (rpc_register_result == (registerResult *) NULL) {
                             clnt_perror(clnt, "register consummer call failed");
                         }
                         msg.query.id = rpc_register_result->registerResult_u.mtype;
@@ -65,13 +59,12 @@ int main()
                         break;
                     case QUERY_CONSUMMERS:
                         rpc_query_result = query_consummers_1((void*) NULL, clnt);
-                        if (rpc_query_result == (queryResult *) NULL)
-                        {
+                        if (rpc_query_result == (queryResult *) NULL) {
                             clnt_perror(clnt, "query consummer call failed");
                         }
                         msg.mtype = msg.query.id;
                         msg.query.id = M_PROD;
-                        memcpy(msg.query.consumidores, rpc_query_result->queryResult_u.mtype, sizeof (msg.query.consumidores));
+                        msg.query.consumidores = rpc_query_result->queryResult_u.mtypes;
                         toInterface->send(msg);
                         break;
                     default:
@@ -82,12 +75,10 @@ int main()
                 }
                 break;
             case M_CONS:
-                switch (msg.query.query)
-                {
+                switch (msg.query.query) {
                     case REGISTER_CONSUMMER:
                         rpc_register_result = register_consummer_1(&msg.query.type, clnt);
-                        if (rpc_register_result == (registerResult *) NULL)
-                        {
+                        if (rpc_register_result == (registerResult *) NULL) {
                             clnt_perror(clnt, "register consummer call failed");
                         }
                         msg.query.id = rpc_register_result->registerResult_u.mtype;
@@ -103,11 +94,9 @@ int main()
             default:
                 // TODO: guardar los pids, hacer get y comparar. Si es distinto matar.
                 for (i = hostList.begin(); i != hostList.end() && *i != msg.mtype; i++);
-                if (i == hostList.end())
-                {
+                if (i == hostList.end()) {
                     rpc_get_result = get_1(&msg.mtype, clnt);
-                    if (rpc_get_result == (getResult *) NULL)
-                    {
+                    if (rpc_get_result == (getResult *) NULL) {
                         clnt_perror(clnt, "get call failed");
                     }
 
@@ -115,12 +104,10 @@ int main()
                     ss.str("");
                     ss << msg.mtype;
                     pid = fork();
-                    if (pid < 0)
-                    {
+                    if (pid < 0) {
                         perror("net-controller: fork()");
                         exit(EXIT_FAILURE);
-                    } else if (pid == 0)
-                    {
+                    } else if (pid == 0) {
                         execlp("./net-sender", "net-sender", rpc_get_result->getResult_u.address, remotePort.c_str(), qid.c_str(), ss.str().c_str(), NULL);
                         perror("net-sender- execlp().");
                         exit(EXIT_FAILURE);
