@@ -1,17 +1,19 @@
 #ifndef IENCARGADO_H
 #define	IENCARGADO_H
 #include "Queue.cpp"
+#include "includes.h"
+#include "net-idManagerProtocol.h"
 #include <string>
 
 class iEncargado {
 public:
-    iEncargado(long numero);
+    iEncargado(enum consummerType tipo);
     struct orden consumirOrden(void);
 private:
-    long numero;
     long id;
     std::string owner;
-    Queue<struct msgAlmacen> * q;
+    Queue<struct iMessage> * fromNet;
+    Queue<struct iMessage> * toNet;
 };
 
 #endif	/* IENCARGADO_H */

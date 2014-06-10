@@ -7,12 +7,11 @@ int main()
 {
     std::stringstream ss;
     std::string owner;
-    long number = 1;
-    srand(time(NULL) + number);
-    ss << "Encargado procesadores " << number << ": ";
+    srand(time(NULL));
+    ss << "Encargado procesadores: ";
     owner = ss.str();
     ss.str("");
-    iEncargado * i = new iEncargado(number);
+    iEncargado * i = new iEncargado(PROCCESSORS);
     Config conf("config.conf");
     int min, max;
     struct orden o;

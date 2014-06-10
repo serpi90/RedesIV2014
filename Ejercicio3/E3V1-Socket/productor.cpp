@@ -3,19 +3,12 @@
 #include "iProductor.h"
 #include <sstream>
 
-int main(int argc, char* argv[])
+int main()
 {
     std::stringstream ss;
     std::string owner;
-    if (argc < 2)
-    {
-        ss << "Usage: " << argv[0] << " <number>" << std::endl;
-        Helper::output(stderr, ss, RED);
-        exit(EXIT_FAILURE);
-    }
-    long number = atoi(argv[1]);
-    srand(time(NULL) + number);
-    ss << "Productor " << number << ": ";
+    srand(time(NULL));
+    ss << "Productor: ";
     owner = ss.str();
     ss.str("");
     iProductor * i = new iProductor();

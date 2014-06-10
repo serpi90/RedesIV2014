@@ -15,14 +15,14 @@ int main(int argc, char** argv) {
     int qid = atoi(argv[3]);
     long mtype = atol(argv[4]);
     Socket * connection;
-    Queue<struct msgAlmacen> * q;
-    struct msgAlmacen iMsg;
+    Queue<struct iMessage> * q;
+    struct iMessage iMsg;
     struct netMessage msg;
     size_t bytes, expectedBytes = sizeof (msg);
 
     connection = new Socket("net-sender");
     connection->active(address, port);
-    q = new Queue<struct msgAlmacen>(PATH, qid, "net-sender");
+    q = new Queue<struct iMessage>(PATH, qid, "net-sender");
     q->get();
 
     do {

@@ -6,13 +6,13 @@
 
 int main()
 {
-    Queue<struct msgAlmacen> * qa;
+    Queue<struct iMessage> * qa;
 
-    qa = new Queue<struct msgAlmacen>(PATH, Q_FROM_INTERFACE_TO_CTL, "iniciador");
+    qa = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, "iniciador");
     qa->create();
-    qa = new Queue<struct msgAlmacen>(PATH, Q_FROM_CTL_TO_NET, "iniciador");
+    qa = new Queue<struct iMessage>(PATH, Q_FROM_CTL_TO_NET, "iniciador");
     qa->create();
-    qa = new Queue<struct msgAlmacen>(PATH, Q_FROM_NET_TO_INTERFACE, "iniciador");
+    qa = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, "iniciador");
     qa->create();
 
     Semaphore mutex(PATH, SEM_MUTEX_IDM, "iniciador");

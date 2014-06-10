@@ -7,11 +7,10 @@
 #include "Queue.cpp"
 #include "net-idManagerProtocol.h"
 
-int main()
-{
-    Queue<struct msgAlmacen> * in;
-    Queue<struct msgAlmacen> * out;
-    struct msgAlmacen msg;
+int main() {
+    Queue<struct iMessage> * in;
+    Queue<struct iMessage> * out;
+    struct iMessage msg;
 
     Socket * connection;
     struct idManagerMessage queryMsg;
@@ -37,32 +36,28 @@ int main()
     ss << Q_FROM_CTL_TO_NET;
     qid = ss.str();
 
-    in = new Queue<struct msgAlmacen>(PATH, Q_FROM_INTERFACE_TO_CTL, "net-sender");
+    in = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, "net-sender");
     in->get();
-    out = new Queue<struct msgAlmacen>(PATH, Q_FROM_CTL_TO_NET, "net-sender");
+    out = new Queue<struct iMessage>(PATH, Q_FROM_CTL_TO_NET, "net-sender");
     out->get();
 
-    while (true)
-    {
+    while (true) {
         msg = in->receive(0);
 
-        for (i = hostList.begin(); i != hostList.end() && *i != msg.type; i++);
-        if (i == hostList.end())
-        {
-            queryMsg.type = GET;
-            queryMsg.mtype.mtype = msg.type;
+        for (i = hostList.begin(); i != hostList.end() && *i != msg.mtype; i++);
+        if (i == hostList.end()) {
+            queryMsg.type = GET_HOST;
+            queryMsg.type.mtype = msg.type;
             connection->send((char*) &queryMsg, sizeof (queryMsg));
             connection->receive((char*) &queryMsg, sizeof (queryMsg));
             hostList.push_back(msg.type);
             ss.str("");
             ss << msg.type;
             pid = fork();
-            if (pid < 0)
-            {
+            if (pid < 0) {
                 perror("net-controller: fork()");
                 exit(EXIT_FAILURE);
-            } else if (pid == 0)
-            {
+            } else if (pid == 0) {
                 execlp("./net-sender", "net-sender", queryMsg.address, remotePort.c_str(), qid.c_str(), ss.str().c_str(), NULL);
                 perror("net-sender- execlp().");
                 exit(EXIT_FAILURE);

@@ -1,42 +1,55 @@
-#include "net-idManagerProtocol.h"
 #include "iProductor.h"
 #include "includes.h"
 #include "Queue.cpp"
-#include "Config.h"
+#include "Helper.h"
+#include "net-idManagerProtocol.h"
 #include <sstream>
 
-iProductor::iProductor()
-{
+iProductor::iProductor() {
     std::stringstream ss;
+    struct iMessage msg;
     ss << "iProductor ";
     this->owner = ss.str();
-    q = new Queue<struct msgAlmacen>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
-    q->get();
-    Config cfg("network.conf");
 
-    unsigned short port = (unsigned short) cfg.getInt("id manager port", 6111);
-    std::string address = cfg.getString("id manager address", "localhost");
+    toNet = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
+    toNet->get();
+    fromNet = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
+    fromNet->get();
 
-    connection = new Socket(owner);
-    connection->active(address, port);
+    msg.mtype = M_PROD;
+    msg.query.query = REGISTER_PRODUCER;
+    toNet->send(msg);
+    msg = fromNet->receive(M_PROD);
+    this->id = msg.query.id;
 }
 
-void iProductor::producirOrden(struct orden orden)
-{
+void iProductor::producirOrden(struct orden orden) {
 
-    struct msgAlmacen msg;
+    struct iMessage msg;
+    struct mtypes consumidores;
+    consumidores.disks = 0;
+    consumidores.motherboards = 0;
+    consumidores.processors = 0;
+    // Preguntar a quienes hay que enviar las ordenes.
+    msg.mtype = M_PROD;
+    msg.query.id = id;
+    msg.query.query = GET_CONSUMMERS;
+    toNet->send(msg);
+    msg = fromNet->receive(msg.query.id);
+    consumidores = msg.query.consumidores;
+
+    msg.mtype = M_CONS;
     msg.orden = orden;
-    struct idManagerMessage query;
-    query.type = QUERY;
-    connection->send((char*) &query, sizeof (query));
 
-    do
-    {
-        connection->receive((char*) &query, sizeof (query));
-        msg.type = query.mtype.mtype;
-        if (msg.type)
-        {
-            q->send(msg);
-        }
-    } while (query.mtype.more);
+    if (consumidores.disks == 0 || consumidores.processors == 0 || consumidores.motherboards == 0) {
+        Helper::output(stderr, "No hay consumidores suficientes.", RED);
+        return;
+    }
+
+    msg.mtype = consumidores.disks;
+    toNet->send(msg);
+    msg.mtype = consumidores.processors;
+    toNet->send(msg);
+    msg.mtype = consumidores.motherboards;
+    toNet->send(msg);
 }

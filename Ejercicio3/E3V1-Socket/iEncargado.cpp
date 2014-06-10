@@ -1,40 +1,29 @@
 #include "iEncargado.h"
 #include "includes.h"
 #include "Queue.cpp"
-#include "net-idManagerProtocol.h"
-#include "Config.h"
-#include "Socket.h"
 #include <sstream>
 
-iEncargado::iEncargado(long numero)
-{
+iEncargado::iEncargado(enum consummerType tipo) {
     std::stringstream ss;
-    this->numero = numero;
-    ss << "iEncargado " << this->numero;
-
-    Config cfg("network.conf");
-
-    unsigned short port = (unsigned short) cfg.getInt("id manager port", 6111);
-    std::string address = cfg.getString("id manager address", "localhost");
-
-    struct idManagerMessage query;
-    Socket * connection = new Socket(ss.str());
-    connection->active(address, port);
-    query.type = REGISTER;
-    connection->send((char*) &query, sizeof (query));
-    connection->receive((char*) &query, sizeof (query));
-    connection->doClose();
-
-    this->id = query.mtype.mtype;
-    ss << " (" << this->id << ")";
+    struct iMessage msg;
+    ss << "iEncargado ";
     this->owner = ss.str();
-    q = new Queue<struct msgAlmacen>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
-    q->get();
+
+    fromNet = new Queue<struct iMessage>(PATH, Q_FROM_NET_TO_INTERFACE, owner);
+    fromNet->get();
+    toNet = new Queue<struct iMessage>(PATH, Q_FROM_INTERFACE_TO_CTL, owner);
+    toNet->get();
+
+    msg.mtype = M_CONS;
+    msg.query.query = REGISTER_CONSUMMER;
+    msg.query.type = tipo;
+    toNet->send(msg);
+    msg = fromNet->receive(M_CONS);
+    this->id = msg.query.id;
 }
 
-struct orden iEncargado::consumirOrden()
-{
-    struct msgAlmacen msg;
-    msg = q->receive(this->id);
+struct orden iEncargado::consumirOrden() {
+    struct iMessage msg;
+    msg = fromNet->receive(this->id);
     return msg.orden;
 }
