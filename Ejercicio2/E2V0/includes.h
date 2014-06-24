@@ -2,7 +2,7 @@
 #define	INCLUDES_H
 
 #define ROBOT_AMOUNT 4
-#define PLATFORM_CAPACITY 20
+#define PLATFORM_CAPACITY 10
 #define DISPOSITIVE_TYPES 5
 
 namespace IPC {

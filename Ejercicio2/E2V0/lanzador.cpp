@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 	} else if (pid < 0) {
 		perror("ExclusionRobots - fork: ");
 	}
-	for (unsigned i = ROBOT_AMOUNT; i > 0; i--) {
+	for (unsigned i = 0; i < ROBOT_AMOUNT; i++) {
 		ss << i;
 
 		pid = fork();

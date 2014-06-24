@@ -28,12 +28,13 @@ int main(int argc, char * argv[]) {
 	Config cfg("config.conf");
 
 	me.id = atol(argv[1]);
+
+	srand(time(NULL) + me.id);
+
 	me.tipo = rand() % DISPOSITIVE_TYPES + 1;
 	ss << "dispositivo " << me.id << " [" << me.tipo << "]";
 	owner = ss.str();
 	ss.str("");
-
-	srand(time(NULL) + me.id);
 
 	colaDeArmado = new Queue<ColaArmado::message>(IPC::path, (long) IPC::QueueIdentifier::ARMADO, owner);
 	colaDeArmado->get();

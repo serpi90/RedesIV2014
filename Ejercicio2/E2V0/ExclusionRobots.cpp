@@ -37,12 +37,16 @@ Exclusion::Exclusion() {
 }
 
 void Exclusion::esperarSiSacando(unsigned i) {
+	if (i >= ROBOT_AMOUNT) {
+		Helper::output(stderr, "ExclusionRobots: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
+		return;
+	}
 	mutex->wait();
 	if (SHMExcl->sacando[i] == BUSY) {
 		Helper::output(stdout, "espero\n", Helper::Colours::D_GREEN);
 		SHMExcl->armando[i] = WAITING;
 		mutex->post();
-		semExcl->wait(i - 1);
+		semExcl->wait(i);
 		mutex->wait();
 	}
 	Helper::output(stdout, "puedo armar\n", Helper::Colours::D_GREEN);
@@ -51,23 +55,31 @@ void Exclusion::esperarSiSacando(unsigned i) {
 }
 
 void Exclusion::avisarSiEsperandoParaSacar(unsigned i) {
+	if (i >= ROBOT_AMOUNT) {
+		Helper::output(stderr, "ExclusionRobots: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
+		return;
+	}
 	mutex->wait();
 	SHMExcl->armando[i] = IDLE;
 	if (SHMExcl->sacando[i] == WAITING) {
 		mutex->post();
-		semExcl->post(i - 1);
+		semExcl->post(i);
 	} else {
 		mutex->post();
 	}
 }
 
 void Exclusion::esperarSiArmando(unsigned i) {
+	if (i >= ROBOT_AMOUNT) {
+		Helper::output(stderr, "ExclusionRobots: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
+		return;
+	}
 	mutex->wait();
 	if (SHMExcl->armando[i] == BUSY) {
 		Helper::output(stdout, "espero\n", Helper::Colours::D_GREEN);
 		SHMExcl->sacando[i] = WAITING;
 		mutex->post();
-		semExcl->wait(i - 1);
+		semExcl->wait(i);
 		mutex->wait();
 	}
 	Helper::output(stdout, "puedo sacar\n", Helper::Colours::D_GREEN);
@@ -76,11 +88,15 @@ void Exclusion::esperarSiArmando(unsigned i) {
 }
 
 void Exclusion::avisarSiEsperandoParaArmar(unsigned i) {
+	if (i >= ROBOT_AMOUNT) {
+		Helper::output(stderr, "ExclusionRobots: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
+		return;
+	}
 	mutex->wait();
 	SHMExcl->sacando[i] = IDLE;
 	if (SHMExcl->armando[i] == WAITING) {
 		mutex->post();
-		semExcl->post(i - 1);
+		semExcl->post(i);
 	} else {
 		mutex->post();
 	}

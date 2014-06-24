@@ -44,12 +44,16 @@ Plataforma::Plataforma() {
 }
 
 unsigned Plataforma::reservar(unsigned i) {
+	if (i >= ROBOT_AMOUNT) {
+		Helper::output(stderr, "Plataforma: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
+		return -1;
+	}
 	mutex->wait();
 	// TODO poner en diagrama
 	while (SHM->amount == PLATFORM_CAPACITY) {
 		SHM->robotStatus[i] = RobotStatus::WAITING;
 		mutex->post();
-		semEspera->wait(i - 1);
+		semEspera->wait(i);
 		mutex->wait();
 	}
 	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
@@ -67,6 +71,10 @@ unsigned Plataforma::reservar(unsigned i) {
 
 void Plataforma::colocarDispositivo(struct dispositivo dispositivo, unsigned lugar) {
 	ColaDispositivo::message m;
+	if (lugar >= PLATFORM_CAPACITY) {
+		Helper::output(stderr, "Plataforma: lugar >= PLATFORM_CAPACITY.\n", Helper::Colours::RED);
+		return;
+	}
 	mutex->wait();
 	if (SHM->slot[lugar].status != SlotStatus::RESERVED) {
 		mutex->post();
@@ -98,7 +106,7 @@ struct dispositivo Plataforma::tomarDispositivo(struct dispositivo dispositivo) 
 				for (unsigned j = 0; j < ROBOT_AMOUNT; j++) {
 					if (SHM->robotStatus[i] == RobotStatus::WAITING) {
 						SHM->robotStatus[i] = RobotStatus::NOT_WAITING;
-						semEspera->post(i - 1);
+						semEspera->post(i);
 					}
 				}
 			}

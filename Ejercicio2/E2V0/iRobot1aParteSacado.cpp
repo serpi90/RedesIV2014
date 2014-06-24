@@ -9,7 +9,7 @@
 #include "Helper.h"
 
 iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
-	this->id = number * 2;
+	this->id = number * 2 + 2;
 	this->number = number;
 	colaActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO, "iRobot1aParteSacado");
 	colaActivado->get();

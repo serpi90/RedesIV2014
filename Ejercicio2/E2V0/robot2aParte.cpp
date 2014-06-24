@@ -28,7 +28,7 @@ int main(int argc, char * argv[]) {
 		Helper::output(stdout, owner + " esperando un dispositivo para sacar.\n", outputColour);
 		msgSalida = colaDeSalida->receive(me);
 		ss << owner << " saque el dispositivo " << msgSalida.dispositivo.id << " de tipo " << msgSalida.dispositivo.tipo << std::endl;
-		Helper::output(stdout, ss, outputColour);
+		Helper::output(stdout, ss, Helper::Colours::GREEN);
 	}
 
 	return 0;
