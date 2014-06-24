@@ -74,8 +74,7 @@ class Queue {
 
 		/* Send message to the queue */
 		void send(T &message) {
-			if (msgsnd(qid, (void*) &message, sizeof(T) - sizeof(long), 0)
-					== -1) {
+			if (msgsnd(qid, (void*) &message, sizeof(T) - sizeof(long), 0) == -1) {
 				error("send");
 			}
 		}
@@ -86,8 +85,7 @@ class Queue {
 		 * Refer to man msgrcv for a detailed explanation of mtype < 0 */
 		T receive(long mtype) {
 			T message;
-			if (msgrcv(qid, (void*) &message, sizeof(T) - sizeof(long), mtype, 0)
-					== -1) {
+			if (msgrcv(qid, (void*) &message, sizeof(T) - sizeof(long), mtype, 0) == -1) {
 				error("receive");
 			}
 			return message;
@@ -102,8 +100,7 @@ class Queue {
 		void error(std::string where) {
 			if (exitOnFailure) {
 				std::stringstream ss;
-				ss << owner << " \033[41m\033[30mError\33[0m qid=" << identifier
-						<< " (" << getpid() << ") QUEUE " << where;
+				ss << owner << " \033[41m\033[30mError\33[0m qid=" << identifier << " (" << getpid() << ") QUEUE " << where;
 				perror(ss.str().c_str());
 				exit(EXIT_FAILURE);
 			}

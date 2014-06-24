@@ -77,8 +77,7 @@ void SemaphoreArray::wait(int index) {
 void SemaphoreArray::error(std::string where) {
 	if (exitOnFailure) {
 		std::stringstream ss;
-		ss << owner << " \033[41m\033[30mError\33[0m semid=" << identifier
-				<< " (" << getpid() << ") SEM " << where;
+		ss << owner << " \033[41m\033[30mError\33[0m semid=" << identifier << " (" << getpid() << ") SEM " << where;
 		perror(ss.str().c_str());
 		exit(EXIT_FAILURE);
 	}

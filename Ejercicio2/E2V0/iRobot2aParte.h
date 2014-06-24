@@ -16,7 +16,7 @@ class iRobot2aParte {
 		iRobot2aParte(long);
 		struct dispositivo tomarDispositivo();
 	private:
-		Queue<colaSalida::message> * colaSalida;
+		Queue<ColaSalida::message> * colaSalida;
 		long type;
 };
 

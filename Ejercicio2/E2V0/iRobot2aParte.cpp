@@ -9,12 +9,12 @@
 
 iRobot2aParte::iRobot2aParte(long type) {
 	this->type = type;
-	colaSalida = new Queue<colaSalida::message>(IPC::path, (long) IPC::QueueIdentifier::SALIDA, "iRobot2aParte");
+	colaSalida = new Queue<ColaSalida::message>(IPC::path, (long) IPC::QueueIdentifier::SALIDA, "iRobot2aParte");
 	colaSalida->get();
 }
 
 struct dispositivo iRobot2aParte::tomarDispositivo() {
-	colaSalida::message msg;
+	ColaSalida::message msg;
 	msg = colaSalida->receive(type);
 	return msg.dispositivo;
 }

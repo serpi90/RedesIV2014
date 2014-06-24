@@ -89,8 +89,7 @@ class SharedMemory {
 		void error(std::string where) {
 			if (exitOnFailure) {
 				std::stringstream ss;
-				ss << owner << " \033[41m\033[30mError\33[0m shmid="
-						<< identifier << " (" << getpid() << ") SHM " << where;
+				ss << owner << " \033[41m\033[30mError\33[0m shmid=" << identifier << " (" << getpid() << ") SHM " << where;
 				perror(ss.str().c_str());
 				exit(EXIT_FAILURE);
 			}

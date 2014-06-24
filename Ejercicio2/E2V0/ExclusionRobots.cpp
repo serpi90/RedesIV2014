@@ -10,16 +10,7 @@
 #include <cstdio>
 #include <sys/signal.h>
 
-using namespace exclusion;
-
-enum status {
-	BUSY, IDLE, WAITING
-};
-
-struct shared {
-		enum status armando[ROBOT_AMOUNT];
-		enum status sacando[ROBOT_AMOUNT];
-};
+using namespace ColaExclusion;
 
 class Exclusion {
 	public:
@@ -48,11 +39,13 @@ Exclusion::Exclusion() {
 void Exclusion::esperarSiSacando(unsigned i) {
 	mutex->wait();
 	if (SHMExcl->sacando[i] == BUSY) {
+		Helper::output(stdout, "espero\n", Helper::Colours::D_GREEN);
 		SHMExcl->armando[i] = WAITING;
 		mutex->post();
-		semExcl->wait(i);
+		semExcl->wait(i - 1);
 		mutex->wait();
 	}
+	Helper::output(stdout, "puedo armar\n", Helper::Colours::D_GREEN);
 	SHMExcl->armando[i] = BUSY;
 	mutex->post();
 }
@@ -62,7 +55,7 @@ void Exclusion::avisarSiEsperandoParaSacar(unsigned i) {
 	SHMExcl->armando[i] = IDLE;
 	if (SHMExcl->sacando[i] == WAITING) {
 		mutex->post();
-		semExcl->post(i);
+		semExcl->post(i - 1);
 	} else {
 		mutex->post();
 	}
@@ -71,11 +64,13 @@ void Exclusion::avisarSiEsperandoParaSacar(unsigned i) {
 void Exclusion::esperarSiArmando(unsigned i) {
 	mutex->wait();
 	if (SHMExcl->armando[i] == BUSY) {
+		Helper::output(stdout, "espero\n", Helper::Colours::D_GREEN);
 		SHMExcl->sacando[i] = WAITING;
 		mutex->post();
-		semExcl->wait(i);
+		semExcl->wait(i - 1);
 		mutex->wait();
 	}
+	Helper::output(stdout, "puedo sacar\n", Helper::Colours::D_GREEN);
 	SHMExcl->sacando[i] = BUSY;
 	mutex->post();
 }
@@ -85,7 +80,7 @@ void Exclusion::avisarSiEsperandoParaArmar(unsigned i) {
 	SHMExcl->sacando[i] = IDLE;
 	if (SHMExcl->armando[i] == WAITING) {
 		mutex->post();
-		semExcl->post(i);
+		semExcl->post(i - 1);
 	} else {
 		mutex->post();
 	}
@@ -96,6 +91,7 @@ int main() {
 	Exclusion e;
 	pid_t pid;
 	Queue<message> * fromInterface, *toInterface;
+	Helper::Colours outputColor = Helper::Colours::D_GREEN;
 
 	// Are we evil programmers that don't care abour our processes children?
 	// Or are we good programmers preventing the awakening of zombies?
@@ -119,17 +115,21 @@ int main() {
 		} else if (pid == 0) {
 			switch (m.operation) {
 				case ESPERAR_SI_SACANDO:
+					Helper::output(stdout, "ESPERAR SI SACANDO\n", outputColor);
 					e.esperarSiSacando(m.number);
 					toInterface->send(m);
 					break;
 				case AVISAR_SI_ESPERANDO_PARA_SACAR:
+					Helper::output(stdout, "AVISAR SI ESPERANDO PARA SACAR\n", outputColor);
 					e.avisarSiEsperandoParaSacar(m.number);
 					break;
 				case ESPERAR_SI_ARMANDO:
+					Helper::output(stdout, "ESPERAR SI ARMANDO\n", outputColor);
 					e.esperarSiArmando(m.number);
 					toInterface->send(m);
 					break;
 				case AVISAR_SI_ESPERANDO_PARA_ARMAR:
+					Helper::output(stdout, "AVISAR SI ESPERANDO PARA ARMAR\n", outputColor);
 					e.avisarSiEsperandoParaArmar(m.number);
 					break;
 				default:

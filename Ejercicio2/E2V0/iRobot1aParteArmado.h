@@ -21,9 +21,9 @@ class iRobot1aParteArmado {
 		void avisarSiEsperandoParaSacar();
 
 	private:
-		Queue<colaArmado::message> * colaArmado;
-		Queue<plataforma::message> * toPlataforma, *fromPlataforma;
-		Queue<exclusion::message> * toExclusion, *fromExclusion;
+		Queue<ColaArmado::message> * colaArmado;
+		Queue<ColaPlataforma::message> * toPlataforma, *fromPlataforma;
+		Queue<ColaExclusion::message> * toExclusion, *fromExclusion;
 		long id;
 		unsigned number;
 };

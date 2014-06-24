@@ -11,25 +11,7 @@
 #include <sys/signal.h>
 #include <strings.h>
 
-using namespace plataforma;
-
-enum class SlotStatus {
-	RESERVED, OCCUPIED, FREE
-};
-
-enum class RobotStatus {
-	WAITING, NOT_WAITING
-};
-
-struct shared {
-
-		struct {
-				struct dispositivo dispositivo;
-				SlotStatus status;
-		} slot[PLATFORM_CAPACITY];
-		RobotStatus robotStatus[ROBOT_AMOUNT];
-		unsigned amount;
-};
+using namespace ColaPlataforma;
 
 class Plataforma {
 	public:
@@ -43,8 +25,8 @@ class Plataforma {
 		SemaphoreArray * semEspera;
 		SharedMemory<struct shared> * shm;
 		struct shared * SHM;
-		Queue<colaActivado::message> * colaDeActivado;
-		Queue<colaDispositivo::message> * colaDeDispositivo;
+		Queue<ColaActivado::message> * colaDeActivado;
+		Queue<ColaDispositivo::message> * colaDeDispositivo;
 };
 
 Plataforma::Plataforma() {
@@ -55,9 +37,9 @@ Plataforma::Plataforma() {
 	shm = new SharedMemory<struct shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::PLATAFORMA, "Plataforma");
 	shm->get();
 	SHM = shm->attach();
-	colaDeActivado = new Queue<colaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO, "Plataforma");
+	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO, "Plataforma");
 	colaDeActivado->get();
-	colaDeDispositivo = new Queue<colaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVO, "Plataforma");
+	colaDeDispositivo = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS, "Plataforma");
 	colaDeDispositivo->get();
 }
 
@@ -67,10 +49,10 @@ unsigned Plataforma::reservar(unsigned i) {
 	while (SHM->amount == PLATFORM_CAPACITY) {
 		SHM->robotStatus[i] = RobotStatus::WAITING;
 		mutex->post();
-		semEspera->wait(i);
+		semEspera->wait(i - 1);
 		mutex->wait();
 	}
-	for (unsigned i; i < PLATFORM_CAPACITY; i++) {
+	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
 		if (SHM->slot[i].status == SlotStatus::FREE) {
 			SHM->slot[i].status = SlotStatus::RESERVED;
 			SHM->amount++;
@@ -84,7 +66,7 @@ unsigned Plataforma::reservar(unsigned i) {
 }
 
 void Plataforma::colocarDispositivo(struct dispositivo dispositivo, unsigned lugar) {
-	colaDispositivo::message m;
+	ColaDispositivo::message m;
 	mutex->wait();
 	if (SHM->slot[lugar].status != SlotStatus::RESERVED) {
 		mutex->post();
@@ -100,7 +82,7 @@ void Plataforma::colocarDispositivo(struct dispositivo dispositivo, unsigned lug
 }
 
 struct dispositivo Plataforma::esperarDispositivo() {
-	colaActivado::message m;
+	ColaActivado::message m;
 	m = colaDeActivado->receive((long) IPC::MessageTypes::M_ANY);
 	return m.dispositivo;
 }
@@ -109,9 +91,20 @@ struct dispositivo Plataforma::tomarDispositivo(struct dispositivo dispositivo) 
 	mutex->wait();
 	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
 		if (SHM->slot[i].dispositivo.id == dispositivo.id) {
-			mutex->post();
-			return dispositivo;
+			bzero(&(SHM->slot[i].dispositivo), sizeof(struct dispositivo));
+			SHM->slot[i].status = SlotStatus::FREE;
+			SHM->amount--;
+			if (SHM->amount == PLATFORM_CAPACITY - 1) {
+				for (unsigned j = 0; j < ROBOT_AMOUNT; j++) {
+					if (SHM->robotStatus[i] == RobotStatus::WAITING) {
+						SHM->robotStatus[i] = RobotStatus::NOT_WAITING;
+						semEspera->post(i - 1);
+					}
+				}
+			}
 		}
+		mutex->post();
+		return dispositivo;
 	}
 	mutex->post();
 	Helper::output(stderr, "Plataforma: Se solicito un dispositivo inexistente.\n", Helper::Colours::RED);
@@ -124,9 +117,10 @@ int main() {
 	Plataforma p;
 	pid_t pid;
 	Queue<message> * fromInterface, *toInterface;
+	Helper::Colours outputColor = Helper::Colours::D_RED;
 
-	// Are we evil programmers that don't care about our processes children?
-	// Or are we good programmers preventing the awakening of zombies?
+// Are we evil programmers that don't care about our processes children?
+// Or are we good programmers preventing the awakening of zombies?
 	struct sigaction sigchld_action;
 	sigchld_action.sa_handler = SIG_DFL;
 	sigchld_action.sa_flags = SA_NOCLDWAIT;
@@ -147,15 +141,19 @@ int main() {
 		} else if (pid == 0) {
 			switch (m.operation) {
 				case RESERVAR:
+					Helper::output(stdout, "RESERVAR\n", outputColor);
 					m.lugar = p.reservar(m.numero);
 					break;
 				case COLOCAR_DISPOSITIVO:
+					Helper::output(stdout, "COLOCAR DISPOSITIVO\n", outputColor);
 					p.colocarDispositivo(m.dispositivo, m.lugar);
 					break;
 				case ESPERAR_DISPOSITIVO:
+					Helper::output(stdout, "ESPERAR DISPOSITIVO\n", outputColor);
 					m.dispositivo = p.esperarDispositivo();
 					break;
 				case TOMAR_DISPOSITIVO:
+					Helper::output(stdout, "TOMAR DISPOSITIVO\n", outputColor);
 					m.dispositivo = p.tomarDispositivo(m.dispositivo);
 					break;
 				default:

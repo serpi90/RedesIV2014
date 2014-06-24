@@ -20,10 +20,10 @@ class iRobot1aParteSacado {
 		void colocarDispositivo(struct dispositivo);
 		void avisarSiEsperandoParaArmar();
 	private:
-		Queue<colaActivado::message> * colaActivado;
-		Queue<colaSalida::message> * colaSalida;
-		Queue<plataforma::message> * toPlataforma, *fromPlataforma;
-		Queue<exclusion::message> * toExclusion, *fromExclusion;
+		Queue<ColaActivado::message> * colaActivado;
+		Queue<ColaSalida::message> * colaSalida;
+		Queue<ColaPlataforma::message> * toPlataforma, *fromPlataforma;
+		Queue<ColaExclusion::message> * toExclusion, *fromExclusion;
 		long id;
 		unsigned number;
 };
