@@ -24,7 +24,7 @@ int main() {
 	salida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
 	salida->get();
 	while (true) {
-		iMsg = in->receive((long) IPC::MessageTypes::M_ANY);
+		iMsg = in->receive((long) IPC::MessageTypes::ANY);
 		switch (iMsg.type) {
 			case Net::iMessageType::ACTIVADO:
 				activado->send(iMsg.activado);

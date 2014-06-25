@@ -55,7 +55,7 @@ void iRobot1aParteArmado::esperarSiSacando() {
 
 struct dispositivo iRobot1aParteArmado::esperarDispositivo() {
 	ColaArmado::message msg;
-	colaArmado->receive((long) IPC::MessageTypes::M_ANY);
+	colaArmado->receive((long) IPC::MessageTypes::ANY);
 	return msg.dispositivo;
 }
 

@@ -84,12 +84,12 @@ namespace IdManager {
 						}
 					} else {
 						bzero(&data, sizeof(data));
-						data.nextMtype = 1;
+						data.nextMtype = (long) IPC::MessageTypes::FIRST_AVAILABLE_MTYPE;
 					}
 					fclose(file);
 				} else {
 					bzero(&data, sizeof(data));
-					data.nextMtype = 1;
+					data.nextMtype = (long) IPC::MessageTypes::FIRST_AVAILABLE_MTYPE;
 				}
 				return data;
 			}
@@ -112,7 +112,7 @@ namespace IdManager {
 			}
 
 			void clearData(struct fileData* dataPtr) {
-				dataPtr->nextMtype = 1;
+				dataPtr->nextMtype = (long) IPC::MessageTypes::FIRST_AVAILABLE_MTYPE;
 				if (dataPtr->hosts.hosts) {
 					free(dataPtr->hosts.hosts);
 				}
@@ -147,7 +147,7 @@ int main() {
 	if (master->passive(port) == -1) {
 		exit(EXIT_FAILURE);
 	};
-	Semaphore * mutex = new Semaphore(IPC::path, (long) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, "idManager");
+	Semaphore * mutex = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, "idManager");
 	mutex->get();
 
 	while (true) {

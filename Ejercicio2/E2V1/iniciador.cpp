@@ -31,48 +31,48 @@ int main() {
 	SharedMemory<ColaExclusion::shared> * shmE;
 	ColaExclusion::shared * exclusion;
 
-	Semaphore * mutexIdm = new Semaphore(IPC::path, (long) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, owner);
+	Semaphore * mutexIdm = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, owner);
 	mutexIdm->create();
 
-	net = new Queue<Net::iMessage>(IPC::path, (long) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
+	net = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
 	net->create();
 
-	arm = new Queue<ColaArmado::message>(IPC::path, (long) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
+	arm = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
 	arm->create();
-	arm = new Queue<ColaArmado::message>(IPC::path, (long) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, owner);
+	arm = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, owner);
 	arm->create();
 
-	act = new Queue<ColaActivado::message>(IPC::path, (long) IPC::QueueIdentifier::ACTIVADO_FROM_DISP_TO_CTL, owner);
+	act = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_DISP_TO_CTL, owner);
 	act->create();
-	act = new Queue<ColaActivado::message>(IPC::path, (long) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
+	act = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	act->create();
 
-	sal = new Queue<ColaSalida::message>(IPC::path, (long) IPC::QueueIdentifier::SALIDA_FROM_INTERFACE_TO_CTL, owner);
+	sal = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_INTERFACE_TO_CTL, owner);
 	sal->create();
-	sal = new Queue<ColaSalida::message>(IPC::path, (long) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
+	sal = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
 	sal->create();
 
-	disp = new Queue<ColaDispositivo::message>(IPC::path, (long) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner);
+	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner);
 	disp->create();
-	disp = new Queue<ColaDispositivo::message>(IPC::path, (long) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner);
+	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner);
 	disp->create();
 
-	plat = new Queue<ColaPlataforma::message>(IPC::path, (long) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, owner);
+	plat = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, owner);
 	plat->create();
-	plat = new Queue<ColaPlataforma::message>(IPC::path, (long) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, owner);
+	plat = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, owner);
 	plat->create();
 
-	excl = new Queue<ColaExclusion::message>(IPC::path, (long) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, owner);
+	excl = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, owner);
 	excl->create();
-	excl = new Queue<ColaExclusion::message>(IPC::path, (long) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, owner);
+	excl = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, owner);
 	excl->create();
 
-	mutexPlat = new Semaphore(path, (int) (long) SemaphoreIdentifier::MUTEX_PLATAFORMA, owner);
+	mutexPlat = new Semaphore(path, (int) SemaphoreIdentifier::MUTEX_PLATAFORMA, owner);
 	mutexPlat->create();
 	mutexPlat->post();
-	semEspera = new SemaphoreArray(path, (int) (long) SemaphoreIdentifier::SEM_ESPERA, ROBOT_AMOUNT, owner);
+	semEspera = new SemaphoreArray(path, (int) SemaphoreIdentifier::SEM_ESPERA, ROBOT_AMOUNT, owner);
 	semEspera->create();
-	shmP = new SharedMemory<ColaPlataforma::shared>(path, (int) (long) SharedMemoryIdentifier::PLATAFORMA, owner);
+	shmP = new SharedMemory<ColaPlataforma::shared>(path, (int) SharedMemoryIdentifier::PLATAFORMA, owner);
 	shmP->create();
 	plataforma = shmP->attach();
 	plataforma->amount = 0;
@@ -83,12 +83,12 @@ int main() {
 		plataforma->slot[i].status = ColaPlataforma::SlotStatus::FREE;
 	}
 
-	mutexExcl = new Semaphore(path, (int) (long) SemaphoreIdentifier::MUTEX_EXCLUSION, owner);
+	mutexExcl = new Semaphore(path, (int) SemaphoreIdentifier::MUTEX_EXCLUSION, owner);
 	mutexExcl->create();
 	mutexExcl->post();
-	semExcl = new SemaphoreArray(path, (int) (long) SemaphoreIdentifier::SEM_EXCLUSION, ROBOT_AMOUNT, owner);
+	semExcl = new SemaphoreArray(path, (int) SemaphoreIdentifier::SEM_EXCLUSION, ROBOT_AMOUNT, owner);
 	semExcl->create();
-	shmE = new SharedMemory<ColaExclusion::shared>(path, (int) (long) SharedMemoryIdentifier::EXCLUSION, owner);
+	shmE = new SharedMemory<ColaExclusion::shared>(path, (int) SharedMemoryIdentifier::EXCLUSION, owner);
 	shmE->create();
 	exclusion = shmE->attach();
 

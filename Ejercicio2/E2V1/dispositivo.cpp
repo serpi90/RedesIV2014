@@ -37,11 +37,11 @@ int main(int argc, char * argv[]) {
 	owner = ss.str();
 	ss.str("");
 
-	colaDeArmado = new Queue<ColaArmado::message>(IPC::path, (long) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
+	colaDeArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
 	colaDeArmado->get();
-	colaDeDispositivos = new Queue<ColaDispositivo::message>(IPC::path, (long) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner);
+	colaDeDispositivos = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner);
 	colaDeDispositivos->get();
-	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (long) IPC::QueueIdentifier::ACTIVADO_FROM_DISP_TO_CTL, owner);
+	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_DISP_TO_CTL, owner);
 	colaDeActivado->get();
 
 	msgArmado.mtype = me.id;

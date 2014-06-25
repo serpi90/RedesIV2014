@@ -23,6 +23,16 @@ namespace IdManager {
 			long broker;
 	};
 
+	struct messageRequest {
+			long mtype;
+			HostKind kind;
+	};
+
+	struct messageReply {
+			long mtype;
+			long id;
+	};
+
 	struct message {
 			MessageType type;
 

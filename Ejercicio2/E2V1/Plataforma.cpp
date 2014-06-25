@@ -132,7 +132,7 @@ int main() {
 	message m;
 
 	while (true) {
-		m = fromInterface->receive((long) IPC::MessageTypes::M_ANY);
+		m = fromInterface->receive((long) IPC::MessageTypes::ANY);
 		pid = fork();
 		if (pid < 0) {
 			perror("fork Plataforma");

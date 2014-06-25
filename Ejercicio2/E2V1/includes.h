@@ -30,7 +30,9 @@ namespace IPC {
 		FROM_INTERFACE_TO_EXCLUSION,
 		FROM_EXCLUSION_TO_INTERFACE,
 		FROM_CTL_TO_NET,
-		FROM_NET_TO_CTL
+		FROM_NET_TO_CTL,
+		TO_ID_MANAGER,
+		FROM_ID_MANAGER
 	};
 
 	enum class SemaphoreIdentifier
@@ -50,7 +52,13 @@ namespace IPC {
 
 	enum class MessageTypes
 		: long {
-			M_ANY = 0
+			ANY = 0,
+		ROBOT_1_ARMADO = 1,
+		ROBOT_1_SACADO = 2,
+		ROBOT_2_SALIDA = 3,
+		DISPOSITIVO = 4,
+		PLATAFORMA = 5,
+		FIRST_AVAILABLE_MTYPE = 6
 	};
 }
 

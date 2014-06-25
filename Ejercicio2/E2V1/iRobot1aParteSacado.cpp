@@ -30,7 +30,7 @@ iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
 
 struct dispositivo iRobot1aParteSacado::esperarDispositivo() {
 	ColaActivado::message msg;
-	msg = colaDeActivado->receive((long) IPC::MessageTypes::M_ANY);
+	msg = colaDeActivado->receive((long) IPC::MessageTypes::ANY);
 	return msg.dispositivo;
 }
 

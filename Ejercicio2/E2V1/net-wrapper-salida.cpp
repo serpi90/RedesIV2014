@@ -13,7 +13,7 @@ int main() {
 
 	imsg.type = Net::iMessageType::SALIDA;
 	while (true) {
-		imsg.salida = in->receive((long) IPC::MessageTypes::M_ANY);
+		imsg.salida = in->receive((long) IPC::MessageTypes::ANY);
 		out->send(imsg);
 	}
 	return 0;

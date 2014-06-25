@@ -13,7 +13,7 @@ int main() {
 
 	imsg.type = Net::iMessageType::ACTIVADO;
 	while (true) {
-		imsg.activado = in->receive((long) IPC::MessageTypes::M_ANY);
+		imsg.activado = in->receive((long) IPC::MessageTypes::ANY);
 		out->send(imsg);
 	}
 	return 0;

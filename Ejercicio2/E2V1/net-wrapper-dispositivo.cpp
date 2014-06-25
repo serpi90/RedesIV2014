@@ -13,7 +13,7 @@ int main() {
 
 	imsg.type = Net::iMessageType::DISPOSITIVO;
 	while (true) {
-		imsg.dispositivo = in->receive((long) IPC::MessageTypes::M_ANY);
+		imsg.dispositivo = in->receive((long) IPC::MessageTypes::ANY);
 		out->send(imsg);
 	}
 	return 0;

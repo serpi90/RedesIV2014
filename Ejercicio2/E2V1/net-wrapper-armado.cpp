@@ -13,7 +13,7 @@ int main() {
 
 	imsg.type = Net::iMessageType::ARMADO;
 	while (true) {
-		imsg.armado = in->receive((long) IPC::MessageTypes::M_ANY);
+		imsg.armado = in->receive((long) IPC::MessageTypes::ANY);
 		out->send(imsg);
 	}
 	return 0;
