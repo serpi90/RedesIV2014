@@ -1,6 +1,7 @@
 #include <string>
 
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
 #include "Semaphore.h"
 #include "SemaphoreArray.h"
@@ -18,6 +19,17 @@ int main() {
 	Queue<ColaDispositivo::message> * disp;
 	Queue<ColaSalida::message> * sal;
 	Queue<Net::iMessage> * net;
+
+	Queue<IdManager::messageRequest> * req;
+	Queue<IdManager::messageReply> * rep;
+
+	req = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner, false);
+	req->get();
+	req->remove();
+
+	rep = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner, false);
+	rep->get();
+	rep->remove();
 
 	Semaphore * mutexPlat;
 	SemaphoreArray * semEspera;
@@ -100,4 +112,6 @@ int main() {
 	shmE = new SharedMemory<ColaExclusion::shared>(path, (int) SharedMemoryIdentifier::EXCLUSION, owner, false);
 	shmE->get();
 	shmE->remove();
+
+	system("pkill -9 net-idManager");
 }

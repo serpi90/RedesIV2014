@@ -1,6 +1,7 @@
 #include <string>
 
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
 #include "Semaphore.h"
 #include "SemaphoreArray.h"
@@ -18,6 +19,14 @@ int main() {
 	Queue<ColaDispositivo::message> * disp;
 	Queue<ColaSalida::message> * sal;
 	Queue<Net::iMessage> * net;
+	Queue<IdManager::messageRequest> * req;
+	Queue<IdManager::messageReply> * rep;
+
+	req = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	req->create();
+
+	rep = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	rep->create();
 
 	Semaphore * mutexPlat;
 	SemaphoreArray * semEspera;
@@ -33,6 +42,7 @@ int main() {
 
 	Semaphore * mutexIdm = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, owner);
 	mutexIdm->create();
+	mutexIdm->post();
 
 	net = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
 	net->create();

@@ -8,23 +8,42 @@
 #include "iRobot1aParteSacado.h"
 
 #include <cstdio>
+#include <string>
 
 #include "Helper.h"
+#include "net-idManagerProtocol.h"
 
 iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
-	this->id = number * 2 + 2;
+
+	std::string owner = "iRobot1aParteSacado";
+	Queue<IdManager::messageRequest> * toIdManager;
+	IdManager::messageRequest idRequest;
+	Queue<IdManager::messageReply> * fromIdManager;
+	IdManager::messageReply idReply;
+
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager->get();
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager->get();
+
+	idRequest.mtype = (long) IPC::MessageTypes::ROBOT_1_SACADO;
+	idRequest.kind = IdManager::HostKind::ROBOT_1_SACADO;
+	toIdManager->send(idRequest);
+	idReply = fromIdManager->receive((long) IPC::MessageTypes::ROBOT_1_SACADO);
+
+	this->id = idReply.id;
 	this->number = number;
-	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, "iRobot1aParteSacado");
+	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	colaDeActivado->get();
-	colaDeSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_INTERFACE_TO_CTL, "iRobot1aParteSacado");
+	colaDeSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_INTERFACE_TO_CTL, owner);
 	colaDeSalida->get();
-	toPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, "iRobot1aParteSacado");
+	toPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, owner);
 	toPlataforma->get();
-	fromPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, "iRobot1aParteSacado");
+	fromPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, owner);
 	fromPlataforma->get();
-	toExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, "iRobot1aParteSacado");
+	toExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, owner);
 	toExclusion->get();
-	fromExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, "iRobot1aParteSacado");
+	fromExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, owner);
 	fromExclusion->get();
 }
 

@@ -11,19 +11,20 @@ COMPONENTES = ExclusionRobots Plataforma
 MODELO = dispositivo robot1aParteArmado robot1aParteSacado robot2aParte
 UTILITARIOS = iniciador lanzador terminador
 NETWORK = net-receiver net-sender net-wrapper-activado net-wrapper-armado net-wrapper-dispositivo net-wrapper-salida net-unwrapper
-programs = $(COMPONENTES) $(MODELO) $(UTILITARIOS) $(NETWORK) net-idManager
+IDM = net-idManager net-idManager-forwarder
+programs = $(COMPONENTES) $(MODELO) $(UTILITARIOS) $(NETWORK) $(IDM)
 objects = $(HELPER) $(IPC) $(INTERFACES)
 
 all: $(objects) $(programs)
 
 clean:
-	$(RM) $(objects) $(programs)
+	$(RM) $(objects) $(programs) ids.dat
 
 $(NETWORK): % : %.cpp Socket.o Queue.o Helper.o
 	g++ -o $@ $< $(HELPER) Socket.o Queue.o $(CFLAGS)
 
-net-idManager: net-idManager.cpp includes.h net-idManagerProtocol.h Semaphore.o SemaphoreArray.o Socket.o $(HELPER)
-	g++ -o $@ $< $(HELPER) Socket.o Semaphore.o SemaphoreArray.o $(CFLAGS)
+$(IDM): % : %.cpp includes.h net-idManagerProtocol.h $(IPC) $(HELPER)
+	g++ -o $@ $< $(HELPER) $(IPC) $(CFLAGS)
 
 $(COMPONENTES) $(UTILITARIOS): % : %.cpp includes.h $(HELPER) $(IPC)
 	g++ -o $@ $< $(HELPER) $(IPC) $(CFLAGS)

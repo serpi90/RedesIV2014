@@ -8,21 +8,40 @@
 #include "iRobot1aParteArmado.h"
 
 #include <cstdio>
+#include <string>
 
 #include "Helper.h"
+#include "net-idManagerProtocol.h"
 
 iRobot1aParteArmado::iRobot1aParteArmado(unsigned number) {
-	this->id = number * 2 + 1;
+
+	std::string owner = "iRobot1aParteArmado";
+	Queue<IdManager::messageRequest> * toIdManager;
+	IdManager::messageRequest idRequest;
+	Queue<IdManager::messageReply> * fromIdManager;
+	IdManager::messageReply idReply;
+
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager->get();
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager->get();
+
+	idRequest.mtype = (long) IPC::MessageTypes::ROBOT_1_ARMADO;
+	idRequest.kind = IdManager::HostKind::ROBOT_1_ARMADO;
+	toIdManager->send(idRequest);
+	idReply = fromIdManager->receive((long) IPC::MessageTypes::ROBOT_1_ARMADO);
+
+	this->id = idReply.id;
 	this->number = number;
-	colaArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, "iRobot1aParteArmado");
+	colaArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, owner);
 	colaArmado->get();
-	toPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, "iRobot1aParteArmado");
+	toPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, owner);
 	toPlataforma->get();
-	fromPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, "iRobot1aParteArmado");
+	fromPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, owner);
 	fromPlataforma->get();
-	toExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, "iRobot1aParteArmado");
+	toExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, owner);
 	toExclusion->get();
-	fromExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, "iRobot1aParteArmado");
+	fromExclusion = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_EXCLUSION_TO_INTERFACE, owner);
 	fromExclusion->get();
 }
 

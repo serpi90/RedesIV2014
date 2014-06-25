@@ -7,15 +7,11 @@
 #include "Config.h"
 #include "Helper.h"
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
 
-int main(int argc, char * argv[]) {
-	if (argc < 2) {
-		Helper::output(stderr, "Usage: dispositivo <id>\n", Helper::Colours::RED);
-		exit(EXIT_FAILURE);
-	}
-
-	std::string owner;
+int main() {
+	std::string owner = "dispositivo";
 	std::stringstream ss;
 	struct dispositivo me;
 	const Helper::Colours outputColour = Helper::Colours::PURPLE;
@@ -26,9 +22,25 @@ int main(int argc, char * argv[]) {
 	ColaDispositivo::message msgDispositivo;
 	Queue<ColaActivado::message> * colaDeActivado;
 	ColaActivado::message msgActivado;
+
 	Config cfg("config.conf");
 
-	me.id = atol(argv[1]);
+	Queue<IdManager::messageRequest> * toIdManager;
+	IdManager::messageRequest idRequest;
+	Queue<IdManager::messageReply> * fromIdManager;
+	IdManager::messageReply idReply;
+
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager->get();
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager->get();
+
+	idRequest.mtype = (long) IPC::MessageTypes::DISPOSITIVO;
+	idRequest.kind = IdManager::HostKind::DISPOSITIVO;
+	toIdManager->send(idRequest);
+	idReply = fromIdManager->receive((long) IPC::MessageTypes::DISPOSITIVO);
+
+	me.id = idReply.id;
 
 	srand(time(NULL) + me.id);
 
