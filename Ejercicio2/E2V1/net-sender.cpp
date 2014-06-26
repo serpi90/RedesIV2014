@@ -18,16 +18,17 @@ int main() {
 	std::string address = cfg.getString("broker address", "localhost");
 	unsigned short port = (unsigned short) cfg.getInt("broker receiver port", 6112);
 	Socket * connection;
-	Queue<Net::iMessage> * q;
-	Net::iMessage iMsg;
-	Net::message msg;
-	size_t bytes, expectedBytes = sizeof(msg);
+	Queue<Net::interfaceMessage> * inputQueue;
+	Net::interfaceMessage input;
+	Net::message output;
+	size_t bytes, sentBytes = sizeof(output);
 	long connNumber;
+	std::string owner = "net-sender";
 
-	q = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, "net-sender");
-	q->get();
+	inputQueue = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
+	inputQueue->get();
 
-	connection = new Socket("net-sender");
+	connection = new Socket(owner);
 	connection->active(address, port);
 	connection->receive((char*) &connNumber, sizeof(connNumber));
 	ss << connNumber;
@@ -41,11 +42,12 @@ int main() {
 	}
 
 	do {
-		iMsg = q->receive((long) IPC::MessageTypes::ANY);
-		msg.size = sizeof(iMsg);
-		memcpy((void*) msg.message, (void*) &iMsg, msg.size);
-		bytes = connection->send((char*) &msg, expectedBytes);
-	} while (bytes == expectedBytes);
+		input = inputQueue->receive((long) IPC::MessageTypes::ANY);
+		output.size = sizeof(input);
+		memcpy((void*) output.message, (void*) &input, output.size);
+		bytes = connection->send((char*) &output, sentBytes);
+		Helper::output(stdout, owner + " envie algo\n", Helper::Colours::D_RED);
+	} while (bytes == sentBytes);
 
 	Helper::output(stdout, "net-sender: connection ended");
 	exit(EXIT_SUCCESS);

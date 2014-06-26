@@ -33,7 +33,7 @@ iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
 
 	this->id = idReply.id;
 	this->number = number;
-	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	aBroker->get();
 	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	colaDeActivado->get();

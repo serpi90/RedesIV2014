@@ -18,12 +18,12 @@ int main() {
 	Queue<ColaArmado::message> * arm;
 	Queue<ColaDispositivo::message> * disp;
 	Queue<ColaSalida::message> * sal;
-	Queue<Net::iMessage> * net;
+	Queue<Net::interfaceMessage> * net;
 	Queue<IdManager::messageRequest> * req;
 	Queue<IdManager::messageReply> * rep;
 	Queue<Broker::message> * brk;
 
-	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	brk->create();
 
 	req = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
@@ -44,7 +44,10 @@ int main() {
 	SharedMemory<ColaExclusion::shared> * shmE;
 	ColaExclusion::shared * exclusion;
 
-	net = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
+	net->create();
+
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner);
 	net->create();
 
 	arm = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);

@@ -5,18 +5,25 @@
  *      Author: julian
  */
 
+#include <unistd.h>
+#include <cstdio>
+#include <iostream>
 #include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include "Helper.h"
 #include "includes.h"
-//#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
+
 //#include "SharedMemory.cpp"
 
 namespace Broker {
 	class Broker {
 		public:
 			Broker() {
-				std::string owner = "broker";
+				owner = "broker";
 
 				activado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_BROKER, owner);
 				activado->get();
@@ -29,61 +36,89 @@ namespace Broker {
 				toSender = new Queue<outgoingMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_SENDER_FROM_BROKER, owner);
 				toSender->get();
 			}
+
 			void addNewId(long id, long connectionNumber) {
-				mtypeToConnection.insert(std::pair<long, long>(id, connectionNumber));
+				std::stringstream ss;
+				ss << owner << " mapeando " << id << " a " << connectionNumber << std::endl;
+				Helper::output(stdout, ss);
+				mtypeToConnection.insert(std::make_pair(id, connectionNumber));
 			}
-			void esperarDispositivoArmado(long id) {
+			void avisameSiEstoyArmado(long id) {
 				outgoingMessage msg;
+
+				msg.mtype = mtypeToConnection.at(id);
+				msg.interfaceMessage.destination = (long) IPC::MessageTypes::UNWRAPPER;
+				msg.interfaceMessage.type = Net::interfaceMessageType::DISPOSITIVO;
 				pid_t pid = fork();
 				if (pid == 0) {
-					msg.mtype = mtypeToConnection.at(id);
-					msg.message.type = Net::iMessageType::DISPOSITIVO;
-					msg.message.dispositivo = dispositivo->receive(id);
+					msg.interfaceMessage.dispositivo = dispositivo->receive(id);
+					msg.interfaceMessage.dispositivo.mtype = id;
 					toSender->send(msg);
+					Helper::output(stdout, owner + " avise a dispositivo que esta armado.\n", Helper::Colours::BG_BLUE);
+					exit(EXIT_SUCCESS);
+
 				} else if (pid < 0) {
 					perror("fork: broker esperarDispositivoArmado.");
 				}
 			}
-			void esperarDispositivoParaArmar(long id) {
+			void dameDispositivoParaArmar(long id) {
 				outgoingMessage msg;
+				msg.mtype = mtypeToConnection.at(id);
+				msg.interfaceMessage.destination = (long) IPC::MessageTypes::UNWRAPPER;
+				msg.interfaceMessage.type = Net::interfaceMessageType::ARMADO;
 				pid_t pid = fork();
 				if (pid == 0) {
-					msg.mtype = mtypeToConnection.at(id);
-					msg.message.type = Net::iMessageType::ARMADO;
-					msg.message.armado = armado->receive((long) IPC::MessageTypes::ANY);
-					msg.message.armado.mtype = id;
+					msg.interfaceMessage.armado = armado->receive((long) IPC::MessageTypes::ANY);
+					msg.interfaceMessage.armado.mtype = id;
+					std::stringstream ss;
+					ss << "dispositivo: " << msg.interfaceMessage.armado.dispositivo.id << " tipo: " << msg.interfaceMessage.armado.dispositivo.tipo << std::endl;
+					Helper::output(stdout, ss);
 					toSender->send(msg);
+					Helper::output(stdout, owner + " envie dispositivo para armar.\n", Helper::Colours::BG_BLUE);
+					exit(EXIT_SUCCESS);
 				} else if (pid < 0) {
 					perror("fork: broker esperarDispositivoParaArmar.");
 				}
+
 			}
-			void sacarDispositivoDeCintaSalida(long id, long type) {
+			void dameDispositivoParaSacarDeCintaSalida(long id, long type) {
 				outgoingMessage msg;
+				msg.mtype = mtypeToConnection.at(id);
+				msg.interfaceMessage.destination = (long) IPC::MessageTypes::UNWRAPPER;
+				msg.interfaceMessage.type = Net::interfaceMessageType::SALIDA;
 				pid_t pid = fork();
 				if (pid == 0) {
-					msg.mtype = mtypeToConnection.at(id);
-					msg.message.type = Net::iMessageType::SALIDA;
-					msg.message.salida = salida->receive(type);
-					msg.message.salida.mtype = type;
+					msg.interfaceMessage.salida = salida->receive(type);
+					msg.interfaceMessage.salida.mtype = type;
 					toSender->send(msg);
+					Helper::output(stdout, owner + " envie dispositivo listo.\n", Helper::Colours::BG_BLUE);
+					exit(EXIT_SUCCESS);
 				} else if (pid < 0) {
 					perror("fork: broker sacarDispositivoDeCintaSalida.");
 				}
 			}
-			void sacarDispositivoDePlataforma(long id) {
+			void dameDispositivoParaSacarDePlataforma(long id) {
 				outgoingMessage msg;
+				msg.mtype = mtypeToConnection.at(id);
+				msg.interfaceMessage.destination = (long) IPC::MessageTypes::UNWRAPPER;
+				msg.interfaceMessage.type = Net::interfaceMessageType::ACTIVADO;
 				pid_t pid = fork();
 				if (pid == 0) {
-					msg.mtype = mtypeToConnection.at(id);
-					msg.message.type = Net::iMessageType::ACTIVADO;
-					msg.message.activado = activado->receive(id);
-					msg.message.activado.mtype = id;
+					msg.interfaceMessage.activado = activado->receive((long) IPC::MessageTypes::ANY);
+					msg.interfaceMessage.activado.mtype = id;
 					toSender->send(msg);
+					Helper::output(stdout, owner + " envie dispositivo activado para sacar de plataforma.\n", Helper::Colours::BG_BLUE);
+					exit(EXIT_SUCCESS);
 				} else if (pid < 0) {
 					perror("fork: broker sacarDispositivoDePlataforma.");
 				}
+
 			}
 		private:
+			struct assocciation {
+					long mtype;
+					long connection;
+			};
 
 			Queue<ColaActivado::message> * activado;
 			Queue<ColaArmado::message> * armado;
@@ -91,39 +126,51 @@ namespace Broker {
 			Queue<ColaSalida::message> * salida;
 			Queue<outgoingMessage> * toSender;
 			std::map<long, long> mtypeToConnection;
-	};
+			std::string owner;
+	}
+	;
 }
 
 int main() {
 	Queue<Broker::message> * fromReceiver;
 	Broker::message incoming;
+	std::string owner = "broker";
 
-	fromReceiver = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, "broker");
+	fromReceiver = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner);
 	fromReceiver->get();
-
+	std::stringstream ss;
 	Broker::Broker broker;
 	while (true) {
 		incoming = fromReceiver->receive((long) IPC::MessageTypes::ANY);
 		switch (incoming.request) {
-			case Broker::Request::NEW_CONNECTION:
-				// TODO Es necesario esto?
-				break;
 			case Broker::Request::NEW_ID:
+				ss << owner << " recibi NEW_ID " << incoming.mtype << " conn: " << incoming.connNumber << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
 				broker.addNewId(incoming.mtype, incoming.connNumber);
 				break;
 			case Broker::Request::AVISAME_SI_ESTOY_ARMADO:
-				broker.esperarDispositivoArmado(incoming.mtype);
+				ss << owner << " recibi AVISAME_SI_ESTOY_ARMADO de " << incoming.mtype << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
+				broker.avisameSiEstoyArmado(incoming.mtype);
 				break;
 			case Broker::Request::DAME_DISPOSITIVO_PARA_ARMAR:
-				broker.esperarDispositivoParaArmar(incoming.mtype);
+				ss << owner << " recibi DAME_DISPOSITIVO_PARA_ARMAR de " << incoming.mtype << " de " << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
+				broker.dameDispositivoParaArmar(incoming.mtype);
 				break;
 			case Broker::Request::DAME_DISPOSITIVO_PARA_SACAR_DE_CINTA_SALIDA:
-				broker.sacarDispositivoDeCintaSalida(incoming.mtype, incoming.type);
+				ss << owner << " recibi DAME_DISPOSITIVO_PARA_SACAR_DE_CINTA_SALIDA de " << incoming.mtype << " tipo " << incoming.type << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
+				broker.dameDispositivoParaSacarDeCintaSalida(incoming.mtype, incoming.type);
 				break;
 			case Broker::Request::DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA:
-				broker.sacarDispositivoDePlataforma(incoming.mtype);
+				ss << owner << " recibi DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA de " << incoming.mtype << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
+				broker.dameDispositivoParaSacarDePlataforma(incoming.mtype);
 				break;
 			default:
+				ss << owner << " recibi algo que no es de " << incoming.mtype << " req: " << (long) incoming.request << " conn " << incoming.connNumber << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_RED);
 				break;
 		}
 	}

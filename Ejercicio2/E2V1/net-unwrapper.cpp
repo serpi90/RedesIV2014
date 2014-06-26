@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 #include <string>
 
 #include "Helper.h"
@@ -6,14 +7,15 @@
 #include "Queue.cpp"
 
 int main() {
-	Queue<Net::iMessage> * in;
+	Queue<Net::interfaceMessage> * in;
 	Queue<ColaActivado::message> * activado;
 	Queue<ColaArmado::message> * armado;
 	Queue<ColaDispositivo::message> * dispositivo;
 	Queue<ColaSalida::message> * salida;
-	Net::iMessage iMsg;
+	Net::interfaceMessage input;
 	std::string owner = "net-unwrapper";
-	in = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner);
+	std::stringstream ss;
+	in = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner);
 	in->get();
 	activado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	activado->get();
@@ -24,19 +26,24 @@ int main() {
 	salida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
 	salida->get();
 	while (true) {
-		iMsg = in->receive((long) IPC::MessageTypes::ANY);
-		switch (iMsg.type) {
-			case Net::iMessageType::ACTIVADO:
-				activado->send(iMsg.activado);
+		input = in->receive((long) IPC::MessageTypes::ANY);
+		switch (input.type) {
+			case Net::interfaceMessageType::ACTIVADO:
+				Helper::output(stdout, owner + " recibi activado.\n", Helper::Colours::PINK);
+				activado->send(input.activado);
 				break;
-			case Net::iMessageType::ARMADO:
-				armado->send(iMsg.armado);
+			case Net::interfaceMessageType::ARMADO:
+				ss << owner << " recibi armado. dispositivo: " << input.armado.dispositivo.id << " [" << input.armado.dispositivo.tipo << "]" << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::PINK);
+				armado->send(input.armado);
 				break;
-			case Net::iMessageType::DISPOSITIVO:
-				dispositivo->send(iMsg.dispositivo);
+			case Net::interfaceMessageType::DISPOSITIVO:
+				Helper::output(stdout, owner + " recibi dispositivo.\n", Helper::Colours::PINK);
+				dispositivo->send(input.dispositivo);
 				break;
-			case Net::iMessageType::SALIDA:
-				salida->send(iMsg.salida);
+			case Net::interfaceMessageType::SALIDA:
+				Helper::output(stdout, owner + " recibi salida.\n", Helper::Colours::PINK);
+				salida->send(input.salida);
 				break;
 			default:
 				Helper::output(stderr, "Net-Unwrapper Recibi mensaje con tipo desconocido.\n", Helper::Colours::RED);

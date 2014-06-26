@@ -9,8 +9,8 @@ void Helper::output(FILE* file, std::stringstream &ss, Colours colour) {
 }
 
 void Helper::output(FILE* file, std::string s, Colours colour) {
-	s = col2string(colour) + s + col2string(Colours::WHITE) + col2string(Colours::BG_BLACK);
-	if (write(fileno(file), s.c_str(), s.size())) {
+	std::string out = col2string(colour) + s + col2string(Colours::DEFAULT);
+	if (write(fileno(file), out.c_str(), out.size())) {
 	}
 }
 
@@ -20,8 +20,11 @@ unsigned int Helper::doSleep(int min, int max) {
 	return time;
 }
 
-std::string Helper::col2string(Colours c) {
+const std::string Helper::col2string(Colours c) {
 	switch (c) {
+		case Colours::DEFAULT:
+			return "\033[0m";
+			break;
 		case Colours::WHITE:
 			return "\033[30m";
 			break;

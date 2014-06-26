@@ -31,7 +31,7 @@ iRobot2aParte::iRobot2aParte(long type) {
 
 	this->id = idReply.id;
 	this->type = type;
-	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	aBroker->get();
 	colaSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
 	colaSalida->get();

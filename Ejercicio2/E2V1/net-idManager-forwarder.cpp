@@ -31,7 +31,6 @@ int main() {
 
 	do {
 		request = in->receive((long) IPC::MessageTypes::ANY);
-		Helper::output(stdout, "net-idManager-forwarder: recibi REGISTER_HOST\n", Helper::Colours::BROWN);
 		msg.type = IdManager::MessageType::REGISTER_HOST;
 		msg.register_host.kind = request.kind;
 		bytes = connection->send((char*) &msg, expectedBytes);
@@ -40,7 +39,6 @@ int main() {
 			reply.mtype = request.mtype;
 			reply.id = msg.register_host.mtype;
 			out->send(reply);
-			Helper::output(stdout, "net-idManager-forwarder: recibi REGISTER_HOST\n", Helper::Colours::BROWN);
 		}
 	} while (bytes == expectedBytes);
 

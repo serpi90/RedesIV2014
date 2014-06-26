@@ -64,6 +64,14 @@ int main() {
 	} else if (pid < 0) {
 		perror("net-wrapper-salida - fork: ");
 	}
+	pid = fork();
+	if (pid == 0) {
+		execlp("./net-idManager-forwarder", "net-idManager-forwarder", NULL);
+		perror("net-idManager-forwarder - execlp: ");
+		exit(EXIT_FAILURE);
+	} else if (pid < 0) {
+		perror("net-idManager-forwarder - fork: ");
+	}
 
 	pid = fork();
 	if (pid == 0) {

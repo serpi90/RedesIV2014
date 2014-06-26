@@ -18,7 +18,7 @@ int main() {
 	Queue<ColaArmado::message> * arm;
 	Queue<ColaDispositivo::message> * disp;
 	Queue<ColaSalida::message> * sal;
-	Queue<Net::iMessage> * net;
+	Queue<Net::interfaceMessage> * net;
 
 	Queue<IdManager::messageRequest> * req;
 	Queue<IdManager::messageReply> * rep;
@@ -26,7 +26,7 @@ int main() {
 	Queue<Broker::message> * brk;
 	Queue<Broker::outgoingMessage> * brko;
 
-	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner, false);
+	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner, false);
 	brk->get();
 	brk->remove();
 	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner, false);
@@ -58,7 +58,11 @@ int main() {
 	mutexIdm->get();
 	mutexIdm->remove();
 
-	net = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner, false);
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner, false);
+	net->get();
+	net->remove();
+
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner, false);
 	net->get();
 	net->remove();
 
@@ -142,5 +146,5 @@ int main() {
 	system("pkill -9 net-receiver");
 	system("pkill -9 broker-receiver");
 	system("pkill -9 broker-sender");
-	system("rm ids.dat");
+	system("rm -f ids.dat");
 }

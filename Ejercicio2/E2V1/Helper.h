@@ -11,6 +11,7 @@ class Helper {
 	public:
 		enum class Colours {
 			BG_BLACK,
+			DEFAULT,
 			WHITE,
 			D_RED,
 			RED,
@@ -36,11 +37,11 @@ class Helper {
 			srand(time(NULL));
 		}
 		;
-		static void output(FILE*, std::stringstream&, Colours = Colours::WHITE);
-		static void output(FILE*, std::string, Colours = Colours::WHITE);
+		static void output(FILE*, std::stringstream&, Colours = Colours::DEFAULT);
+		static void output(FILE*, std::string, Colours = Colours::DEFAULT);
 		static unsigned int doSleep(int min, int max);
 	private:
-		static std::string col2string(Colours);
+		static const std::string col2string(Colours);
 
 };
 

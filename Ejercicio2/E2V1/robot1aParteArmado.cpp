@@ -42,7 +42,6 @@ int main(int argc, char * argv[]) {
 		// TODO cambiar tomar a esperar.
 		dispositivo = interfaz->esperarDispositivo();
 		interfaz->esperarSiSacando();
-		Helper::output(stdout, owner + " armando.\n", outputColour);
 
 		ss << owner << " armando dispositivo " << dispositivo.id << " de tipo " << dispositivo.tipo << "." << std::endl;
 		Helper::output(stdout, ss, outputColour);

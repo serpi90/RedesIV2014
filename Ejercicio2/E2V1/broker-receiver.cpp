@@ -12,24 +12,24 @@
 #include "Queue.cpp"
 #include "Socket.h"
 
-void notifyBrokerIfNecessary(Queue<Broker::message> * q, long cNr, Net::iMessage m) {
+void notifyBrokerIfNecessary(Queue<Broker::message> * q, long cNr, Net::interfaceMessage m) {
 	static std::set<long> knownIds;
 	long mtype = 0;
 	Broker::message msg;
 	switch (m.type) {
-		case Net::iMessageType::ACTIVADO:
+		case Net::interfaceMessageType::ACTIVADO:
 			mtype = m.activado.mtype;
 			break;
-		case Net::iMessageType::ARMADO:
+		case Net::interfaceMessageType::ARMADO:
 			mtype = m.armado.mtype;
 			break;
-		case Net::iMessageType::DISPOSITIVO:
+		case Net::interfaceMessageType::DISPOSITIVO:
 			mtype = m.dispositivo.mtype;
 			break;
-		case Net::iMessageType::BROKER_REQUEST:
+		case Net::interfaceMessageType::BROKER_REQUEST:
 			mtype = m.broker_request.mtype;
 			break;
-		case Net::iMessageType::SALIDA:
+		case Net::interfaceMessageType::SALIDA:
 			mtype = m.salida.mtype;
 			break;
 		default:
@@ -58,9 +58,9 @@ int main() {
 	Queue<ColaSalida::message> * salida;
 	Queue<Broker::message> * toBroker;
 	Net::message msg;
-	Net::iMessage incomingMessage;
+	Net::interfaceMessage incomingMessage;
 	Broker::message msgBrk;
-	size_t bytes, expectedBytes = sizeof(incomingMessage);
+	size_t bytes, expectedBytes = sizeof(msg);
 	long connectionNumber = 1;
 
 	Config cfg("network.conf");
@@ -91,10 +91,6 @@ int main() {
 			Helper::output(stderr, "Error en accept.\n");
 			exit(EXIT_FAILURE);
 		}
-		msgBrk.mtype = (long) IPC::MessageTypes::BROKER;
-		msgBrk.request = Broker::Request::NEW_CONNECTION;
-		msgBrk.connNumber = connectionNumber;
-		toBroker->send(msgBrk);
 		pid = fork();
 		if (pid < 0) {
 			perror("fork: net-receiver.");
@@ -108,20 +104,28 @@ int main() {
 					notifyBrokerIfNecessary(toBroker, connectionNumber, incomingMessage);
 					// Envio el mensaje a la cola que coresponde.
 					switch (incomingMessage.type) {
-						case Net::iMessageType::ACTIVADO:
+						case Net::interfaceMessageType::ACTIVADO:
+							Helper::output(stdout, owner + " recibi ACTIVADO\n", Helper::Colours::BG_CYAN);
 							activado->send(incomingMessage.activado);
 							break;
-						case Net::iMessageType::ARMADO:
+						case Net::interfaceMessageType::ARMADO:
+							Helper::output(stdout, owner + " recibi ARMADO\n", Helper::Colours::BG_CYAN);
 							armado->send(incomingMessage.armado);
 							break;
-						case Net::iMessageType::DISPOSITIVO:
+						case Net::interfaceMessageType::DISPOSITIVO:
+							Helper::output(stdout, owner + " recibi DISPOSITIVO\n", Helper::Colours::BG_CYAN);
 							dispositivo->send(incomingMessage.dispositivo);
 							break;
-						case Net::iMessageType::BROKER_REQUEST:
+						case Net::interfaceMessageType::BROKER_REQUEST:
+							Helper::output(stdout, owner + " recibi BROKER_REQUEST\n", Helper::Colours::BG_CYAN);
 							toBroker->send(incomingMessage.broker_request);
 							break;
-						case Net::iMessageType::SALIDA:
+						case Net::interfaceMessageType::SALIDA:
+							Helper::output(stdout, owner + " recibi SALIDA\n", Helper::Colours::BG_CYAN);
 							salida->send(incomingMessage.salida);
+							break;
+						case Net::interfaceMessageType::PLATAFORMA:
+							Helper::output(stdout, owner + " recibi PLATAFORMA\n", Helper::Colours::BG_CYAN);
 							break;
 						default:
 							Helper::output(stderr, owner + " mensaje no reconocido\n", Helper::Colours::RED);

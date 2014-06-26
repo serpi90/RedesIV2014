@@ -20,8 +20,8 @@ int main() {
 	Queue<Broker::outgoingMessage> * fromBroker;
 
 	Net::message msg;
-	Net::iMessage incomingMessage;
-	size_t bytes, expectedBytes = sizeof(incomingMessage);
+	Net::interfaceMessage input;
+	size_t bytes, sentBytes = sizeof(msg);
 	long connectionNumber = 1;
 
 	Config cfg("network.conf");
@@ -51,11 +51,12 @@ int main() {
 			perror("fork: net-sender.");
 		} else if (pid == 0) {
 			do {
-				incomingMessage = fromBroker->receive(connectionNumber).message;
-				msg.size = sizeof(incomingMessage);
-				memcpy((void*) &incomingMessage, (void*) msg.message, msg.size);
-				bytes = connection->send((char*) &msg, expectedBytes);
-			} while (bytes == expectedBytes);
+				input = fromBroker->receive(connectionNumber).interfaceMessage;
+				msg.size = sizeof(input);
+				memcpy((void*) msg.message, (void*) &input, msg.size);
+				bytes = connection->send((char*) &msg, sentBytes);
+				Helper::output(stdout, owner + " envie algo\n", Helper::Colours::BG_PURPLE);
+			} while (bytes == sentBytes);
 			Helper::output(stdout, "net-sender: connection ended");
 			exit(EXIT_SUCCESS);
 		}

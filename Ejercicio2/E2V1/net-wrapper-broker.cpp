@@ -1,19 +1,25 @@
+#include <cstdio>
+#include <string>
+
+#include "Helper.h"
 #include "includes.h"
 #include "Queue.cpp"
 
 int main() {
 	Queue<Broker::message> *in;
-	Queue<Net::iMessage> * out;
-	Net::iMessage imsg;
+	Queue<Net::interfaceMessage> * out;
+	Net::interfaceMessage imsg;
+	std::string owner = "net-wrapper-broker";
 
-	in = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, "net-wrapper-broker");
+	in = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	in->get();
-	out = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, "net-wrapper-broker");
+	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
 	out->get();
 
-	imsg.type = Net::iMessageType::BROKER_REQUEST;
+	imsg.type = Net::interfaceMessageType::BROKER_REQUEST;
 	while (true) {
 		imsg.broker_request = in->receive((long) IPC::MessageTypes::ANY);
+		Helper::output(stdout, owner + " enviando.\n", Helper::Colours::PINK);
 		out->send(imsg);
 	}
 	return 0;
