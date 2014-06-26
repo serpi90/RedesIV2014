@@ -21,6 +21,7 @@ net-wrapper-armado
 net-wrapper-broker
 net-wrapper-dispositivo
 net-wrapper-salida
+net-wrapper-syncMessage
 *.o
 Plataforma
 .project

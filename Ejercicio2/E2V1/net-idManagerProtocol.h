@@ -10,7 +10,7 @@ namespace IdManager {
 	};
 
 	enum class HostKind {
-		DISPOSITIVO, ROBOT_1_ARMADO, ROBOT_1_SACADO, ROBOT_2, BROKER
+		DISPOSITIVO, ROBOT_1_ARMADO, ROBOT_1_SACADO, ROBOT_2, PLATAFORMA, BROKER
 	};
 
 	struct register_host {

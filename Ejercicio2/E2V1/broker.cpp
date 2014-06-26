@@ -7,17 +7,18 @@
 
 #include <unistd.h>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "Helper.h"
 #include "includes.h"
 #include "Queue.cpp"
-
-//#include "SharedMemory.cpp"
+#include "SharedMemory.cpp"
+#include "Semaphore.h"
 
 namespace Broker {
 	class Broker {
@@ -35,12 +36,24 @@ namespace Broker {
 				salida->get();
 				toSender = new Queue<outgoingMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_SENDER_FROM_BROKER, owner);
 				toSender->get();
+				syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_BROKER, owner);
+				syncPlat->get();
+				mutex = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_BROKER_SYNC, owner);
+				mutex->get();
+				shm = new SharedMemory<ColaPlataforma::shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_PLAT, owner);
+				shm->get();
+				shmPlataforma = shm->attach();
+				shmPlataforma->amount = 0;
+				for (unsigned i = 0; i < ROBOT_AMOUNT; i++) {
+					shmPlataforma->robotStatus[i] = ColaPlataforma::RobotStatus::NOT_WAITING;
+				}
+				for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
+					shmPlataforma->slot[i].status = ColaPlataforma::SlotStatus::FREE;
+				}
+
 			}
 
 			void addNewId(long id, long connectionNumber) {
-				std::stringstream ss;
-				ss << owner << " mapeando " << id << " a " << connectionNumber << std::endl;
-				Helper::output(stdout, ss);
 				mtypeToConnection.insert(std::make_pair(id, connectionNumber));
 			}
 			void avisameSiEstoyArmado(long id) {
@@ -70,9 +83,6 @@ namespace Broker {
 				if (pid == 0) {
 					msg.interfaceMessage.armado = armado->receive((long) IPC::MessageTypes::ANY);
 					msg.interfaceMessage.armado.mtype = id;
-					std::stringstream ss;
-					ss << "dispositivo: " << msg.interfaceMessage.armado.dispositivo.id << " tipo: " << msg.interfaceMessage.armado.dispositivo.tipo << std::endl;
-					Helper::output(stdout, ss);
 					toSender->send(msg);
 					Helper::output(stdout, owner + " envie dispositivo para armar.\n", Helper::Colours::BG_BLUE);
 					exit(EXIT_SUCCESS);
@@ -112,7 +122,65 @@ namespace Broker {
 				} else if (pid < 0) {
 					perror("fork: broker sacarDispositivoDePlataforma.");
 				}
+			}
+			void dameShm(long id) {
+				// Recibi solicitud de shm
+				outgoingMessage msg;
+				ColaPlataforma::syncMessage updated;
+				msg.mtype = mtypeToConnection.at(id);
+				msg.interfaceMessage.destination = (long) IPC::MessageTypes::UNWRAPPER;
+				msg.interfaceMessage.type = Net::interfaceMessageType::PLATAFORMA_SYNC;
+				pid_t pid = fork();
+				if (pid == 0) {
+					// Atiendo 1 solicitud de shm por vez.
+					mutex->wait();
 
+					// Envio la shm
+					msg.interfaceMessage.syncMessage.mtype = id;
+					msg.interfaceMessage.syncMessage.shm = *shmPlataforma;
+					Helper::output(stdout, owner + " envio shm a la plataforma.\n", Helper::Colours::BG_BLUE);
+					toSender->send(msg);
+
+					// Espero la shm actualizada
+					updated = syncPlat->receive(id);
+					Helper::output(stdout, owner + " plataforma devolvio la shm.\n", Helper::Colours::BG_BLUE);
+					*shmPlataforma = updated.shm;
+					std::stringstream ss;
+					ss << "amount: " << shmPlataforma->amount;
+					for (unsigned i = 0; i < ROBOT_AMOUNT; i++) {
+						ss << " status " << i;
+						switch (shmPlataforma->robotStatus[i]) {
+							case ColaPlataforma::RobotStatus::NOT_WAITING:
+								ss << " NOT_WAITING";
+								break;
+							case ColaPlataforma::RobotStatus::WAITING:
+								ss << " WAITING";
+								break;
+						}
+					}
+					ss << std::endl;
+					for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
+						ss << i << ": ";
+						switch (shmPlataforma->slot[i].status) {
+							case ColaPlataforma::SlotStatus::FREE:
+								ss << "FREE ";
+								break;
+							case ColaPlataforma::SlotStatus::RESERVED:
+								ss << "RSVD ";
+								break;
+							case ColaPlataforma::SlotStatus::OCCUPIED:
+								ss << "OCPD ";
+								break;
+						}
+					}
+					ss << std::endl;
+					Helper::output(stdout, ss);
+
+					mutex->post();
+					exit(EXIT_SUCCESS);
+				} else if (pid < 0) {
+					perror("fork: broker dameShm.");
+				}
 			}
 		private:
 			struct assocciation {
@@ -125,10 +193,14 @@ namespace Broker {
 			Queue<ColaDispositivo::message> * dispositivo;
 			Queue<ColaSalida::message> * salida;
 			Queue<outgoingMessage> * toSender;
+			Queue<ColaPlataforma::syncMessage> * syncPlat;
+			SharedMemory<ColaPlataforma::shared> * shm;
+
+			Semaphore * mutex;
 			std::map<long, long> mtypeToConnection;
 			std::string owner;
-	}
-	;
+			ColaPlataforma::shared * shmPlataforma;
+	};
 }
 
 int main() {
@@ -154,7 +226,7 @@ int main() {
 				broker.avisameSiEstoyArmado(incoming.mtype);
 				break;
 			case Broker::Request::DAME_DISPOSITIVO_PARA_ARMAR:
-				ss << owner << " recibi DAME_DISPOSITIVO_PARA_ARMAR de " << incoming.mtype << " de " << std::endl;
+				ss << owner << " recibi DAME_DISPOSITIVO_PARA_ARMAR de " << incoming.mtype << std::endl;
 				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
 				broker.dameDispositivoParaArmar(incoming.mtype);
 				break;
@@ -167,6 +239,11 @@ int main() {
 				ss << owner << " recibi DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA de " << incoming.mtype << std::endl;
 				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
 				broker.dameDispositivoParaSacarDePlataforma(incoming.mtype);
+				break;
+			case Broker::Request::DAME_SHM:
+				ss << owner << " recibi DAME_SHM de " << incoming.mtype << std::endl;
+				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
+				broker.dameShm(incoming.mtype);
 				break;
 			default:
 				ss << owner << " recibi algo que no es de " << incoming.mtype << " req: " << (long) incoming.request << " conn " << incoming.connNumber << std::endl;

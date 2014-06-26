@@ -57,9 +57,9 @@ int main() {
 	Queue<ColaDispositivo::message> * dispositivo;
 	Queue<ColaSalida::message> * salida;
 	Queue<Broker::message> * toBroker;
+	Queue<ColaPlataforma::syncMessage> * syncPlat;
 	Net::message msg;
 	Net::interfaceMessage incomingMessage;
-	Broker::message msgBrk;
 	size_t bytes, expectedBytes = sizeof(msg);
 	long connectionNumber = 1;
 
@@ -76,6 +76,8 @@ int main() {
 	salida->get();
 	toBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner);
 	toBroker->get();
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_BROKER, owner);
+	syncPlat->get();
 
 	master = new Socket(owner);
 	if (master->passive(port) == -1) {
@@ -124,8 +126,9 @@ int main() {
 							Helper::output(stdout, owner + " recibi SALIDA\n", Helper::Colours::BG_CYAN);
 							salida->send(incomingMessage.salida);
 							break;
-						case Net::interfaceMessageType::PLATAFORMA:
+						case Net::interfaceMessageType::PLATAFORMA_SYNC:
 							Helper::output(stdout, owner + " recibi PLATAFORMA\n", Helper::Colours::BG_CYAN);
+							syncPlat->send(incomingMessage.syncMessage);
 							break;
 						default:
 							Helper::output(stderr, owner + " mensaje no reconocido\n", Helper::Colours::RED);

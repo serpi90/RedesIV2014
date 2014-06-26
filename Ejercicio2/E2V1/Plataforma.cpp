@@ -3,9 +3,12 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <string>
 
 #include "Helper.h"
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
 #include "Semaphore.h"
 #include "SemaphoreArray.h"
@@ -21,23 +24,105 @@ class Plataforma {
 		struct dispositivo esperarDispositivo();
 		struct dispositivo tomarDispositivo(struct dispositivo);
 	private:
+		long id;
 		Semaphore * mutex;
 		SemaphoreArray * semEspera;
-		SharedMemory<struct shared> * shm;
-		struct shared * SHM;
+		SharedMemory<shared> * shm;
+		shared * SHM;
 		Queue<ColaDispositivo::message> * colaDeDispositivo;
+		Queue<ColaPlataforma::syncMessage> * toBroker, *fromBroker;
+		Queue<Broker::message> * brokerRequests;
+		void traerShm();
+		void devolverShm();
 };
 
 Plataforma::Plataforma() {
-	mutex = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_PLATAFORMA, "Plataforma");
+	std::string owner = "Plataforma";
+	Queue<IdManager::messageRequest> * toIdManager;
+	IdManager::messageRequest idRequest;
+	Queue<IdManager::messageReply> * fromIdManager;
+	IdManager::messageReply idReply;
+
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager->get();
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager->get();
+
+	idRequest.mtype = (long) IPC::MessageTypes::PLATAFORMA;
+	idRequest.kind = IdManager::HostKind::PLATAFORMA;
+	toIdManager->send(idRequest);
+	idReply = fromIdManager->receive((long) IPC::MessageTypes::PLATAFORMA);
+
+	this->id = idReply.id;
+
+	mutex = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_PLATAFORMA, owner);
 	mutex->get();
-	semEspera = new SemaphoreArray(IPC::path, (int) IPC::SemaphoreIdentifier::SEM_ESPERA, ROBOT_AMOUNT, "Plataforma");
+	semEspera = new SemaphoreArray(IPC::path, (int) IPC::SemaphoreIdentifier::SEM_ESPERA, ROBOT_AMOUNT, owner);
 	semEspera->get();
-	shm = new SharedMemory<struct shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::PLATAFORMA, "Plataforma");
+	shm = new SharedMemory<shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::PLATAFORMA, owner);
 	shm->get();
 	SHM = shm->attach();
-	colaDeDispositivo = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, "Plataforma");
+	colaDeDispositivo = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner);
 	colaDeDispositivo->get();
+	toBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_BROKER, owner);
+	toBroker->get();
+	fromBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_FROM_BROKER, owner);
+	fromBroker->get();
+	brokerRequests = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
+	brokerRequests->get();
+}
+
+void Plataforma::traerShm() {
+	std::stringstream ss;
+	mutex->wait();
+	Broker::message request;
+	ColaPlataforma::syncMessage msg;
+
+	//Solicito la shm
+	request.request = Broker::Request::DAME_SHM;
+	request.mtype = id;
+	brokerRequests->send(request);
+
+	// Recibo la shm
+	msg = fromBroker->receive(id);
+	*SHM = msg.shm;
+
+	ss << "amount: " << SHM->amount;
+	for (unsigned i = 0; i < ROBOT_AMOUNT; i++) {
+		ss << " status " << i;
+		switch (SHM->robotStatus[i]) {
+			case RobotStatus::NOT_WAITING:
+				ss << " NOT_WAITING";
+				break;
+			case RobotStatus::WAITING:
+				ss << " WAITING";
+				break;
+		}
+	}
+	ss << std::endl;
+	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
+		ss << i << ": ";
+		switch (SHM->slot[i].status) {
+			case ColaPlataforma::SlotStatus::FREE:
+				ss << "FREE ";
+				break;
+			case ColaPlataforma::SlotStatus::RESERVED:
+				ss << "RSVD ";
+				break;
+			case ColaPlataforma::SlotStatus::OCCUPIED:
+				ss << "OCPD ";
+				break;
+		}
+	}
+	ss << std::endl;
+	Helper::output(stdout, ss);
+}
+void Plataforma::devolverShm() {
+	ColaPlataforma::syncMessage msg;
+	msg.shm = *SHM;
+	msg.mtype = id;
+	toBroker->send(msg);
+	mutex->post();
 }
 
 unsigned Plataforma::reservar(unsigned i) {
@@ -45,49 +130,67 @@ unsigned Plataforma::reservar(unsigned i) {
 		Helper::output(stderr, "Plataforma: i >= ROBOT_AMOUNT.\n", Helper::Colours::RED);
 		return -1;
 	}
-	mutex->wait();
+
+	this->traerShm();
 	// TODO poner en diagrama
 	while (SHM->amount == PLATFORM_CAPACITY) {
 		SHM->robotStatus[i] = RobotStatus::WAITING;
-		mutex->post();
+		this->devolverShm();
 		semEspera->wait(i);
-		mutex->wait();
+		this->traerShm();
 	}
 	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
 		if (SHM->slot[i].status == SlotStatus::FREE) {
 			SHM->slot[i].status = SlotStatus::RESERVED;
 			SHM->amount++;
-			mutex->post();
+			this->devolverShm();
+			Helper::output(stdout, "plataforma termine RESERVAR\n", Helper::Colours::D_RED);
 			return i;
 		}
 	}
-	mutex->post();
+	this->devolverShm();
 	Helper::output(stderr, "Plataforma: no hay slots disponibles, cuando deberia haber.\n", Helper::Colours::RED);
 	return -1;
 }
 
 void Plataforma::colocarDispositivo(struct dispositivo dispositivo, unsigned lugar) {
 	ColaDispositivo::message m;
+	std::stringstream ss;
 	if (lugar >= PLATFORM_CAPACITY) {
 		Helper::output(stderr, "Plataforma: lugar >= PLATFORM_CAPACITY.\n", Helper::Colours::RED);
 		return;
 	}
-	mutex->wait();
+
+	this->traerShm();
 	if (SHM->slot[lugar].status != SlotStatus::RESERVED) {
-		mutex->post();
-		Helper::output(stderr, "Plataforma intentando reservar en un lugar ocupado.\n", Helper::Colours::RED);
-		return;
+		this->devolverShm();
+		ss << "Plataforma intentando colocar en un lugar no reservado: " << lugar << " ";
+		switch (SHM->slot[lugar].status) {
+			case SlotStatus::FREE:
+				ss << "FREE" << std::endl;
+				break;
+			case SlotStatus::RESERVED:
+				ss << "RESERVED" << std::endl;
+				break;
+			case SlotStatus::OCCUPIED:
+				ss << "OCCUPIED" << std::endl;
+				break;
+		}
+		Helper::output(stderr, ss, Helper::Colours::RED);
+	} else {
+		SHM->slot[lugar].dispositivo = dispositivo;
+		SHM->slot[lugar].status = SlotStatus::OCCUPIED;
+		this->devolverShm();
+		// TODO: Actualizar diagrama
+		m.mtype = dispositivo.id;
+		Helper::output(stdout, "plataforma termine COLOCAR_DISPOSITIVO\n", Helper::Colours::D_RED);
+		colaDeDispositivo->send(m);
+
 	}
-	SHM->slot[lugar].dispositivo = dispositivo;
-	SHM->slot[lugar].status = SlotStatus::OCCUPIED;
-	mutex->post();
-	// TODO: Actualizar diagrama
-	m.mtype = dispositivo.id;
-	colaDeDispositivo->send(m);
 }
 
 struct dispositivo Plataforma::tomarDispositivo(struct dispositivo dispositivo) {
-	mutex->wait();
+	this->traerShm();
 	for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
 		if (SHM->slot[i].dispositivo.id == dispositivo.id) {
 			bzero(&(SHM->slot[i].dispositivo), sizeof(struct dispositivo));
@@ -102,10 +205,11 @@ struct dispositivo Plataforma::tomarDispositivo(struct dispositivo dispositivo) 
 				}
 			}
 		}
-		mutex->post();
+		this->devolverShm();
+		Helper::output(stdout, "plataforma termine TOMAR_DISPOSITIVO\n", Helper::Colours::D_RED);
 		return dispositivo;
 	}
-	mutex->post();
+	this->devolverShm();
 	Helper::output(stderr, "Plataforma: Se solicito un dispositivo inexistente.\n", Helper::Colours::RED);
 	bzero(&dispositivo, sizeof(dispositivo));
 	return dispositivo;
@@ -140,15 +244,15 @@ int main() {
 		} else if (pid == 0) {
 			switch (m.operation) {
 				case RESERVAR:
-					Helper::output(stdout, "RESERVAR\n", outputColor);
+					Helper::output(stdout, "plataforma recibi RESERVAR\n", outputColor);
 					m.lugar = p.reservar(m.numero);
 					break;
 				case COLOCAR_DISPOSITIVO:
-					Helper::output(stdout, "COLOCAR DISPOSITIVO\n", outputColor);
+					Helper::output(stdout, "plataforma recibi COLOCAR DISPOSITIVO\n", outputColor);
 					p.colocarDispositivo(m.dispositivo, m.lugar);
 					break;
 				case TOMAR_DISPOSITIVO:
-					Helper::output(stdout, "TOMAR DISPOSITIVO\n", outputColor);
+					Helper::output(stdout, "plataforma recibi TOMAR DISPOSITIVO\n", outputColor);
 					m.dispositivo = p.tomarDispositivo(m.dispositivo);
 					break;
 				default:

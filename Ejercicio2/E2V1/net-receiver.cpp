@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
 	size_t bytes, expectedBytes = sizeof(msg);
 	long connNumber = atol(argv[1]);
 
-	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner);
+	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_UNWRAPPER, owner);
 	out->get();
 
 	connection = new Socket(owner);
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
 	do {
 		bytes = connection->receive((char*) &msg, expectedBytes);
-		Helper::output(stdout, owner + " recibi algo\n", Helper::Colours::D_CYAN);
+		//Helper::output(stdout, owner + " recibi algo\n", Helper::Colours::D_CYAN);
 		if (bytes == expectedBytes) {
 			memcpy((void*) &output, (void*) msg.message, msg.size);
 			output.destination = (long) IPC::MessageTypes::UNWRAPPER;

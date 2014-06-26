@@ -5,8 +5,8 @@
 
 #define ROBOT_AMOUNT 4
 #define PLATFORM_CAPACITY 10
-#define DISPOSITIVE_TYPES 5
-#define NET_MESSAGE_SIZE 4096
+#define DISPOSITIVE_TYPES 1
+#define NET_MESSAGE_SIZE 8192
 
 #include <unistd.h>
 
@@ -17,29 +17,32 @@ namespace IPC {
 	enum class QueueIdentifier
 		: int {
 			INVALID_IDENTIFIER = 0,
-		ARMADO_FROM_DISP_TO_CTL = 1,
-		ARMADO_FROM_CTL_TO_INTERFACE = 2,
-		ARMADO_BROKER = 3,
-		ACTIVADO_FROM_DISP_TO_CTL = 4,
-		ACTIVADO_FROM_CTL_TO_INTERFACE = 5,
-		ACTIVADO_BROKER = 6,
-		SALIDA_FROM_INTERFACE_TO_CTL = 7,
-		SALIDA_FROM_CTL_TO_INTERFACE = 8,
-		SALIDA_BROKER = 9,
-		DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL = 10,
-		DISPOSITIVOS_FROM_CTL_TO_DISP = 11,
-		DISPOSITIVOS_BROKER = 12,
+		ACTIVADO_BROKER = 1,
+		ACTIVADO_FROM_CTL_TO_INTERFACE = 2,
+		ACTIVADO_FROM_DISP_TO_CTL = 3,
+		ARMADO_BROKER = 4,
+		ARMADO_FROM_CTL_TO_INTERFACE = 5,
+		ARMADO_FROM_DISP_TO_CTL = 6,
+		DISPOSITIVOS_BROKER = 7,
+		DISPOSITIVOS_FROM_CTL_TO_DISP = 8,
+		DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL = 9,
+		FROM_EXCLUSION_TO_INTERFACE = 10,
+		FROM_ID_MANAGER = 11,
+		FROM_INTERFACE_TO_EXCLUSION = 12,
 		FROM_INTERFACE_TO_PLATAFORMA = 13,
-		FROM_PLATAFORMA_TO_INTERFACE = 14,
-		FROM_INTERFACE_TO_EXCLUSION = 15,
-		FROM_EXCLUSION_TO_INTERFACE = 16,
-		FROM_CTL_TO_NET = 17,
-		FROM_NET_TO_CTL = 18,
-		TO_ID_MANAGER = 19,
-		FROM_ID_MANAGER = 20,
-		TO_BROKER = 21,
-		TO_BROKER_FROM_RECEIVER = 22,
-		TO_SENDER_FROM_BROKER = 23
+		FROM_NET_TO_UNWRAPPER = 14,
+		FROM_PLATAFORMA_TO_INTERFACE = 15,
+		FROM_WRAPPER_TO_NET = 16,
+		PLATAFORMA_BROKER = 17,
+		PLATAFORMA_FROM_BROKER = 18,
+		PLATAFORMA_TO_BROKER = 19,
+		SALIDA_BROKER = 20,
+		SALIDA_FROM_CTL_TO_INTERFACE = 21,
+		SALIDA_FROM_INTERFACE_TO_CTL = 22,
+		TO_BROKER = 23,
+		TO_BROKER_FROM_RECEIVER = 24,
+		TO_ID_MANAGER = 25,
+		TO_SENDER_FROM_BROKER = 26
 	};
 
 	enum class SemaphoreIdentifier
@@ -49,12 +52,13 @@ namespace IPC {
 		MUTEX_PLATAFORMA,
 		SEM_EXCLUSION,
 		SEM_ESPERA,
-		MUTEX_ID_MANAGER
+		MUTEX_ID_MANAGER,
+		MUTEX_BROKER_SYNC
 	};
 
 	enum class SharedMemoryIdentifier
 		: int {
-			INVALID_IDENTIFIER = 0, EXCLUSION, PLATAFORMA
+			INVALID_IDENTIFIER = 0, EXCLUSION, PLATAFORMA, BROKER_PLAT
 	};
 
 	enum class MessageTypes
@@ -123,7 +127,7 @@ namespace ColaPlataforma {
 		WAITING, NOT_WAITING
 	};
 
-	struct shared {
+	typedef struct {
 
 			struct {
 					struct dispositivo dispositivo;
@@ -131,7 +135,12 @@ namespace ColaPlataforma {
 			} slot[PLATFORM_CAPACITY];
 			RobotStatus robotStatus[ROBOT_AMOUNT];
 			unsigned amount;
-	};
+	} shared;
+
+	typedef struct {
+			long mtype;
+			shared shm;
+	} syncMessage;
 }
 
 namespace ColaArmado {
@@ -171,7 +180,8 @@ namespace Broker {
 		AVISAME_SI_ESTOY_ARMADO,
 		DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA,
 		DAME_DISPOSITIVO_PARA_SACAR_DE_CINTA_SALIDA,
-		NEW_ID
+		NEW_ID,
+		DAME_SHM
 	};
 
 	struct message {
@@ -186,7 +196,7 @@ namespace Broker {
 
 namespace Net {
 	enum class interfaceMessageType {
-		ACTIVADO, ARMADO, DISPOSITIVO, PLATAFORMA, SALIDA, BROKER_REQUEST
+		ACTIVADO, ARMADO, DISPOSITIVO, PLATAFORMA_SYNC, SALIDA, BROKER_REQUEST
 	};
 	struct interfaceMessage {
 			long destination;
@@ -196,9 +206,9 @@ namespace Net {
 					ColaActivado::message activado;
 					ColaArmado::message armado;
 					ColaDispositivo::message dispositivo;
-					ColaPlataforma::message plataforma;
 					ColaSalida::message salida;
 					Broker::message broker_request;
+					ColaPlataforma::syncMessage syncMessage;
 			};
 	};
 

@@ -55,7 +55,7 @@ int main() {
 				msg.size = sizeof(input);
 				memcpy((void*) msg.message, (void*) &input, msg.size);
 				bytes = connection->send((char*) &msg, sentBytes);
-				Helper::output(stdout, owner + " envie algo\n", Helper::Colours::BG_PURPLE);
+				//Helper::output(stdout, owner + " envie algo\n", Helper::Colours::BG_PURPLE);
 			} while (bytes == sentBytes);
 			Helper::output(stdout, "net-sender: connection ended");
 			exit(EXIT_SUCCESS);

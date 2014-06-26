@@ -12,10 +12,11 @@ int main() {
 	Queue<ColaArmado::message> * armado;
 	Queue<ColaDispositivo::message> * dispositivo;
 	Queue<ColaSalida::message> * salida;
+	Queue<ColaPlataforma::syncMessage> * syncPlat;
 	Net::interfaceMessage input;
 	std::string owner = "net-unwrapper";
 	std::stringstream ss;
-	in = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner);
+	in = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_UNWRAPPER, owner);
 	in->get();
 	activado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	activado->get();
@@ -25,6 +26,9 @@ int main() {
 	dispositivo->get();
 	salida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
 	salida->get();
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_FROM_BROKER, owner);
+	syncPlat->get();
+
 	while (true) {
 		input = in->receive((long) IPC::MessageTypes::ANY);
 		switch (input.type) {
@@ -44,6 +48,10 @@ int main() {
 			case Net::interfaceMessageType::SALIDA:
 				Helper::output(stdout, owner + " recibi salida.\n", Helper::Colours::PINK);
 				salida->send(input.salida);
+				break;
+			case Net::interfaceMessageType::PLATAFORMA_SYNC:
+				Helper::output(stdout, owner + " recibi syncMessage.\n", Helper::Colours::PINK);
+				syncPlat->send(input.syncMessage);
 				break;
 			default:
 				Helper::output(stderr, "Net-Unwrapper Recibi mensaje con tipo desconocido.\n", Helper::Colours::RED);

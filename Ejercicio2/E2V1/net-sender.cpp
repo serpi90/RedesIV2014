@@ -25,7 +25,7 @@ int main() {
 	long connNumber;
 	std::string owner = "net-sender";
 
-	inputQueue = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
+	inputQueue = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_WRAPPER_TO_NET, owner);
 	inputQueue->get();
 
 	connection = new Socket(owner);
@@ -46,7 +46,7 @@ int main() {
 		output.size = sizeof(input);
 		memcpy((void*) output.message, (void*) &input, output.size);
 		bytes = connection->send((char*) &output, sentBytes);
-		Helper::output(stdout, owner + " envie algo\n", Helper::Colours::D_RED);
+		//Helper::output(stdout, owner + " envie algo\n", Helper::Colours::D_RED);
 	} while (bytes == sentBytes);
 
 	Helper::output(stdout, "net-sender: connection ended");

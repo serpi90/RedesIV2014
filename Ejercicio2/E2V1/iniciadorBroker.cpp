@@ -5,6 +5,8 @@
 
 #include "includes.h"
 #include "Queue.cpp"
+#include "SharedMemory.cpp"
+#include "Semaphore.h"
 
 using namespace IPC;
 
@@ -18,6 +20,16 @@ int main() {
 	Queue<ColaSalida::message> * sal;
 	Queue<Broker::message> * brk;
 	Queue<Broker::outgoingMessage> * brko;
+	Queue<ColaPlataforma::syncMessage> * syncPlat;
+	Semaphore * mutex;
+	SharedMemory<ColaPlataforma::shared> * shm;
+
+	shm = new SharedMemory<ColaPlataforma::shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_PLAT, owner);
+	shm->create();
+
+	mutex = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_BROKER_SYNC, owner);
+	mutex->create();
+	mutex->post();
 
 	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner);
 	brk->create();
@@ -36,6 +48,9 @@ int main() {
 
 	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_BROKER, owner);
 	disp->create();
+
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_BROKER, owner);
+	syncPlat->create();
 
 	pid = fork();
 	if (pid == 0) {

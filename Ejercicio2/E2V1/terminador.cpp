@@ -26,6 +26,17 @@ int main() {
 	Queue<Broker::message> * brk;
 	Queue<Broker::outgoingMessage> * brko;
 
+	Queue<ColaPlataforma::syncMessage> * syncPlat;
+
+	Semaphore * mutexBrk;
+
+	mutexBrk = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_BROKER_SYNC, owner, false);
+	mutexBrk->get();
+	mutexBrk->remove();
+	SharedMemory<ColaPlataforma::shared> * shm;
+	shm = new SharedMemory<ColaPlataforma::shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_PLAT, owner, false);
+	shm->get();
+
 	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner, false);
 	brk->get();
 	brk->remove();
@@ -58,11 +69,11 @@ int main() {
 	mutexIdm->get();
 	mutexIdm->remove();
 
-	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner, false);
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_WRAPPER_TO_NET, owner, false);
 	net->get();
 	net->remove();
 
-	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_CTL, owner, false);
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_NET_TO_UNWRAPPER, owner, false);
 	net->get();
 	net->remove();
 
@@ -112,6 +123,16 @@ int main() {
 	plat = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_PLATAFORMA_TO_INTERFACE, owner, false);
 	plat->get();
 	plat->remove();
+
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_BROKER, owner, false);
+	syncPlat->get();
+	syncPlat->remove();
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_FROM_BROKER, owner, false);
+	syncPlat->get();
+	syncPlat->remove();
+	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_BROKER, owner, false);
+	syncPlat->get();
+	syncPlat->remove();
 
 	excl = new Queue<ColaExclusion::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_EXCLUSION, owner, false);
 	excl->get();

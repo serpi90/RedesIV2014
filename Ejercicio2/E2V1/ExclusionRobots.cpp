@@ -131,21 +131,21 @@ int main() {
 		} else if (pid == 0) {
 			switch (m.operation) {
 				case ESPERAR_SI_SACANDO:
-					Helper::output(stdout, "ESPERAR SI SACANDO\n", outputColor);
+					Helper::output(stdout, "ExclusionRobots recibi ESPERAR SI SACANDO\n", outputColor);
 					e.esperarSiSacando(m.number);
 					toInterface->send(m);
 					break;
 				case AVISAR_SI_ESPERANDO_PARA_SACAR:
-					Helper::output(stdout, "AVISAR SI ESPERANDO PARA SACAR\n", outputColor);
+					Helper::output(stdout, "ExclusionRobots recibi AVISAR SI ESPERANDO PARA SACAR\n", outputColor);
 					e.avisarSiEsperandoParaSacar(m.number);
 					break;
 				case ESPERAR_SI_ARMANDO:
-					Helper::output(stdout, "ESPERAR SI ARMANDO\n", outputColor);
+					Helper::output(stdout, "ExclusionRobots recibi ESPERAR SI ARMANDO\n", outputColor);
 					e.esperarSiArmando(m.number);
 					toInterface->send(m);
 					break;
 				case AVISAR_SI_ESPERANDO_PARA_ARMAR:
-					Helper::output(stdout, "AVISAR SI ESPERANDO PARA ARMAR\n", outputColor);
+					Helper::output(stdout, "ExclusionRobots recibi AVISAR SI ESPERANDO PARA ARMAR\n", outputColor);
 					e.avisarSiEsperandoParaArmar(m.number);
 					break;
 				default:
