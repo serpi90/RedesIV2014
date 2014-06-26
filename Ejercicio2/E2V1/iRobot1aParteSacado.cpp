@@ -33,6 +33,8 @@ iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
 
 	this->id = idReply.id;
 	this->number = number;
+	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	aBroker->get();
 	colaDeActivado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner);
 	colaDeActivado->get();
 	colaDeSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_INTERFACE_TO_CTL, owner);
@@ -49,7 +51,12 @@ iRobot1aParteSacado::iRobot1aParteSacado(unsigned number) {
 
 struct dispositivo iRobot1aParteSacado::esperarDispositivo() {
 	ColaActivado::message msg;
-	msg = colaDeActivado->receive((long) IPC::MessageTypes::ANY);
+	Broker::message msgBrk;
+	msgBrk.mtype = id;
+	msgBrk.request = Broker::Request::DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA;
+	aBroker->send(msgBrk);
+	// Inicialmente hacia recive(0) pero el broker me lo envia especificamente a mi ahora.
+	msg = colaDeActivado->receive(id);
 	return msg.dispositivo;
 }
 

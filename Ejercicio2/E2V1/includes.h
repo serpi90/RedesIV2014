@@ -19,12 +19,16 @@ namespace IPC {
 			INVALID_IDENTIFIER = 0,
 		ARMADO_FROM_DISP_TO_CTL,
 		ARMADO_FROM_CTL_TO_INTERFACE,
+		ARMADO_BROKER,
 		ACTIVADO_FROM_DISP_TO_CTL,
 		ACTIVADO_FROM_CTL_TO_INTERFACE,
+		ACTIVADO_BROKER,
 		SALIDA_FROM_INTERFACE_TO_CTL,
 		SALIDA_FROM_CTL_TO_INTERFACE,
+		SALIDA_BROKER,
 		DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL,
 		DISPOSITIVOS_FROM_CTL_TO_DISP,
+		DISPOSITIVOS_BROKER,
 		FROM_INTERFACE_TO_PLATAFORMA,
 		FROM_PLATAFORMA_TO_INTERFACE,
 		FROM_INTERFACE_TO_EXCLUSION,
@@ -32,7 +36,10 @@ namespace IPC {
 		FROM_CTL_TO_NET,
 		FROM_NET_TO_CTL,
 		TO_ID_MANAGER,
-		FROM_ID_MANAGER
+		FROM_ID_MANAGER,
+		TO_BROKER_RECEIVER,
+		TO_BROKER_FROM_RECEIVER,
+		TO_SENDER_FROM_BROKER
 	};
 
 	enum class SemaphoreIdentifier
@@ -58,7 +65,8 @@ namespace IPC {
 		ROBOT_2 = 3,
 		DISPOSITIVO = 4,
 		PLATAFORMA = 5,
-		FIRST_AVAILABLE_MTYPE = 6
+		BROKER = 6,
+		FIRST_AVAILABLE_MTYPE = 7
 	};
 }
 
@@ -156,9 +164,29 @@ namespace ColaDispositivo {
 	} message;
 }
 
+namespace Broker {
+	enum class Request {
+		DAME_DISPOSITIVO_PARA_ARMAR,
+		AVISAME_SI_ESTOY_ARMADO,
+		DAME_DISPOSITIVO_PARA_SACAR_DE_PLATAFORMA,
+		DAME_DISPOSITIVO_PARA_SACAR_DE_CINTA_SALIDA,
+		NEW_CONNECTION,
+		NEW_ID
+	};
+
+	struct message {
+			long mtype;
+			union {
+					long type;
+					long connNumber;
+			};
+			Request request;
+	};
+}
+
 namespace Net {
 	enum class iMessageType {
-		ACTIVADO, ARMADO, DISPOSITIVO, PLATAFORMA, SALIDA
+		ACTIVADO, ARMADO, DISPOSITIVO, PLATAFORMA, SALIDA, BROKER_REQUEST
 	};
 	struct iMessage {
 			iMessageType type;
@@ -169,12 +197,20 @@ namespace Net {
 					ColaDispositivo::message dispositivo;
 					ColaPlataforma::message plataforma;
 					ColaSalida::message salida;
+					Broker::message broker_request;
 			};
 	};
 
 	struct message {
 			size_t size;
 			char message[NET_MESSAGE_SIZE];
+	};
+}
+
+namespace Broker {
+	struct outgoingMessage {
+			long mtype;
+			Net::iMessage message;
 	};
 }
 

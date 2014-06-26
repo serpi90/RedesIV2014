@@ -69,7 +69,6 @@ namespace IdManager {
 			}
 
 			struct fileData readFile(std::string filename) {
-				unsigned i;
 				struct fileData data;
 				FILE * file = fopen(filename.c_str(), "rb");
 				if (file) {
@@ -96,7 +95,6 @@ namespace IdManager {
 
 			bool writeFile(const char * filename, struct fileData data) {
 				FILE * file = fopen(filename, "wb");
-				unsigned i;
 				if (file) {
 					fwrite(&(data.nextMtype), sizeof(data.nextMtype), 1, file);
 					fwrite(&(data.hosts.amount), sizeof(data.hosts.amount), 1, file);
@@ -130,8 +128,6 @@ int main() {
 	IdManager::message msg;
 	size_t bytes, expectedBytes = sizeof(msg);
 	char * address;
-	long * list = NULL;
-	long mtype;
 	std::stringstream ss;
 	IdManager::IdManager * idm;
 

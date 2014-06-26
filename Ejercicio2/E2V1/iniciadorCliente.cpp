@@ -21,6 +21,10 @@ int main() {
 	Queue<Net::iMessage> * net;
 	Queue<IdManager::messageRequest> * req;
 	Queue<IdManager::messageReply> * rep;
+	Queue<Broker::message> * brk;
+
+	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	brk->create();
 
 	req = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
 	req->create();
@@ -39,10 +43,6 @@ int main() {
 
 	SharedMemory<ColaExclusion::shared> * shmE;
 	ColaExclusion::shared * exclusion;
-
-	Semaphore * mutexIdm = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_ID_MANAGER, owner);
-	mutexIdm->create();
-	mutexIdm->post();
 
 	net = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_CTL_TO_NET, owner);
 	net->create();

@@ -18,7 +18,7 @@ int main() {
 	Queue<IdManager::messageRequest> * in;
 	Queue<IdManager::messageReply> * out;
 	size_t bytes, expectedBytes = sizeof(msg);
-	Config cfg("network.cfg");
+	Config cfg("network.conf");
 	std::string address = cfg.getString("id manager address", "localhost");
 	unsigned short port = (unsigned short) cfg.getInt("id manager port", 6111);
 

@@ -24,6 +24,7 @@ class iRobot1aParteSacado {
 		Queue<ColaSalida::message> * colaDeSalida;
 		Queue<ColaPlataforma::message> * toPlataforma, *fromPlataforma;
 		Queue<ColaExclusion::message> * toExclusion, *fromExclusion;
+		Queue<Broker::message> * aBroker;
 		long id;
 		unsigned number;
 };

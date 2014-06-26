@@ -1,9 +1,11 @@
 #include <stddef.h>
-#include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <string>
 
+#include "Config.h"
 #include "Helper.h"
 #include "includes.h"
 #include "Queue.cpp"
@@ -11,43 +13,39 @@
 
 int main(int argc, char** argv) {
 	if (argc < 2) {
-		Helper::output(stderr, "usage: net-receiver <port> <queue id>\n", Helper::Colours::RED);
+		Helper::output(stderr, "usage: net-receiver <connection number>\n", Helper::Colours::RED);
 		exit(EXIT_FAILURE);
 	}
-	unsigned short port = (unsigned short) atoi(argv[1]);
-	int qid = atoi(argv[2]);
-	Socket * master, *connection;
-	pid_t pid;
+	std::stringstream ss;
+	Config cfg("network.conf");
+	std::string address = cfg.getString("broker address", "localhost");
+	unsigned short port = (unsigned short) cfg.getInt("broker sender port", 6113);
+	Socket * connection;
 	Queue<Net::iMessage> * q;
+	Net::iMessage iMsg;
 	Net::message msg;
 	size_t bytes, expectedBytes = sizeof(msg);
-	Net::iMessage iMsg;
-	q = new Queue<Net::iMessage>(IPC::path, qid, "net-receiver");
-	q->get();
-	master = new Socket("net-receiver");
-	master->passive(port);
+	long connNumber = atol(argv[1]);
 
-	while (true) {
-		connection = master->doAccept();
-		if (connection == NULL) {
-			Helper::output(stderr, "Error en accept.\n");
-			exit(EXIT_FAILURE);
+	q = new Queue<Net::iMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, "net-receiver");
+	q->get();
+
+	connection = new Socket("net-receiver");
+	connection->active(address, port);
+	connection->send((char*) &connNumber, sizeof(connNumber));
+
+	do {
+		bytes = connection->receive((char*) &msg, expectedBytes);
+		if (bytes == expectedBytes) {
+			memcpy((void*) &iMsg, (void*) msg.message, msg.size);
+			q->send(iMsg);
 		}
-		pid = fork();
-		if (pid < 0) {
-			perror("fork: net-receiver.");
-		} else if (pid == 0) {
-			do {
-				bytes = connection->receive((char*) &msg, expectedBytes);
-				if (bytes == expectedBytes) {
-					memcpy((void*) &iMsg, (void*)msg.message, msg.size);
-					q->send(iMsg);
-				}
-			} while (bytes == expectedBytes);
-			Helper::output(stdout, "net-receiver: connection ended");
-			exit(EXIT_SUCCESS);
-		}
-	}
+
+	} while (bytes == expectedBytes);
+
+	Helper::output(stdout, "net-receiver: connection ended");
+	exit(EXIT_SUCCESS);
+
 	return 0;
 }
 

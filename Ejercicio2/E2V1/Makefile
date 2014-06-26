@@ -1,6 +1,8 @@
-CFLAGS = -Wall -Wextra -pedantic -std=gnu++11 -Wno-unused-variable
+CFLAGS = -Wall -Wextra -pedantic -std=c++11
 CFLAGS += -g
 .PHONY: all clean
+.SILENT: count
+
 
 IPC_WITH_HEADER = SemaphoreArray.o Semaphore.o Socket.o
 IPC_WITHOUT_HEADER = Queue.o SharedMemory.o
@@ -9,18 +11,28 @@ HELPER = Config.o Helper.o
 INTERFACES = iRobot1aParteArmado.o  iRobot1aParteSacado.o  iRobot2aParte.o
 COMPONENTES = ExclusionRobots Plataforma
 MODELO = dispositivo robot1aParteArmado robot1aParteSacado robot2aParte
-UTILITARIOS = iniciador lanzador terminador
-NETWORK = net-receiver net-sender net-wrapper-activado net-wrapper-armado net-wrapper-dispositivo net-wrapper-salida net-unwrapper
+UTILITARIOS = iniciadorCliente iniciadorIdManager iniciadorBroker lanzadorCliente terminador
+NETWORK = net-receiver net-sender net-wrapper-activado net-wrapper-armado net-wrapper-dispositivo net-wrapper-salida net-wrapper-broker net-unwrapper broker-sender broker-receiver
 IDM = net-idManager net-idManager-forwarder
-programs = $(COMPONENTES) $(MODELO) $(UTILITARIOS) $(NETWORK) $(IDM)
+BROKER = broker
+programs = $(COMPONENTES) $(MODELO) $(UTILITARIOS) $(NETWORK) $(IDM) $(BROKER)
 objects = $(HELPER) $(IPC) $(INTERFACES)
 
 all: $(objects) $(programs)
 
+count:
+	echo -n "Objects: "
+	echo $(objects) | wc -w
+	echo -n "Programs: "
+	echo $(programs) | wc -w
+
 clean:
 	$(RM) $(objects) $(programs) ids.dat
 
-$(NETWORK): % : %.cpp Socket.o Queue.o Helper.o
+$(BROKER): % : %.cpp $(IPC) $(HELPER) includes.h net-idManagerProtocol.h
+	g++ -o $@ $< $(HELPER) $(IPC) $(CFLAGS)
+
+$(NETWORK): % : %.cpp Socket.o Queue.o $(HELPER) 
 	g++ -o $@ $< $(HELPER) Socket.o Queue.o $(CFLAGS)
 
 $(IDM): % : %.cpp includes.h net-idManagerProtocol.h $(IPC) $(HELPER)

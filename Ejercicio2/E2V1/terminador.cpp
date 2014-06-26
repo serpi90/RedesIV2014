@@ -23,6 +23,19 @@ int main() {
 	Queue<IdManager::messageRequest> * req;
 	Queue<IdManager::messageReply> * rep;
 
+	Queue<Broker::message> * brk;
+	Queue<Broker::outgoingMessage> * brko;
+
+	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner, false);
+	brk->get();
+	brk->remove();
+	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner, false);
+	brk->get();
+	brk->remove();
+	brko = new Queue<Broker::outgoingMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_SENDER_FROM_BROKER, owner, false);
+	brko->get();
+	brko->remove();
+
 	req = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner, false);
 	req->get();
 	req->remove();
@@ -55,11 +68,17 @@ int main() {
 	arm = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, owner, false);
 	arm->get();
 	arm->remove();
+	arm = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_BROKER, owner, false);
+	arm->get();
+	arm->remove();
 
 	act = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_DISP_TO_CTL, owner, false);
 	act->get();
 	act->remove();
 	act = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_FROM_CTL_TO_INTERFACE, owner, false);
+	act->get();
+	act->remove();
+	act = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_BROKER, owner, false);
 	act->get();
 	act->remove();
 
@@ -69,11 +88,17 @@ int main() {
 	sal = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner, false);
 	sal->get();
 	sal->remove();
+	sal = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_BROKER, owner, false);
+	sal->get();
+	sal->remove();
 
 	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner, false);
 	disp->get();
 	disp->remove();
 	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner, false);
+	disp->get();
+	disp->remove();
+	disp = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_BROKER, owner, false);
 	disp->get();
 	disp->remove();
 
@@ -114,4 +139,8 @@ int main() {
 	shmE->remove();
 
 	system("pkill -9 net-idManager");
+	system("pkill -9 net-receiver");
+	system("pkill -9 broker-receiver");
+	system("pkill -9 broker-sender");
+	system("rm ids.dat");
 }

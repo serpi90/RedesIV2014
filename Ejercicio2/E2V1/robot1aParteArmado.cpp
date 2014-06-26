@@ -8,12 +8,12 @@
 #include "Helper.h"
 #include "includes.h"
 #include "iRobot1aParteArmado.h"
-//#include "Queue.cpp"
 
 int main(int argc, char * argv[]) {
 	if (argc < 2) {
 		Helper::output(stderr, "Usage: robot1aParteArmado <id>\n", Helper::Colours::RED);
 		exit(EXIT_FAILURE);
+		Helper::output(stderr, IPC::path);
 	}
 
 	std::string owner;

@@ -16,6 +16,8 @@ int main() {
 	struct dispositivo me;
 	const Helper::Colours outputColour = Helper::Colours::PURPLE;
 
+	Queue<Broker::message> * aBroker;
+	Broker::message msgBroker;
 	Queue<ColaArmado::message> * colaDeArmado;
 	ColaArmado::message msgArmado;
 	Queue<ColaDispositivo::message> * colaDeDispositivos;
@@ -49,6 +51,9 @@ int main() {
 	owner = ss.str();
 	ss.str("");
 
+	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_RECEIVER, owner);
+	aBroker->get();
+
 	colaDeArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
 	colaDeArmado->get();
 	colaDeDispositivos = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_CTL_TO_DISP, owner);
@@ -62,6 +67,9 @@ int main() {
 	Helper::output(stdout, owner + " poniendome en lista para ser armado.\n", outputColour);
 	colaDeArmado->send(msgArmado);
 
+	msgBroker.mtype = (long) me.id;
+	msgBroker.request = Broker::Request::AVISAME_SI_ESTOY_ARMADO;
+	aBroker->send(msgBroker);
 	msgDispositivo = colaDeDispositivos->receive(me.id);
 	Helper::output(stdout, owner + " estoy armado.\n", outputColour);
 
