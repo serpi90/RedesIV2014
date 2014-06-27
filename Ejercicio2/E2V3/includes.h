@@ -14,7 +14,7 @@
 
 namespace IPC {
 
-	static const char * path = "/home/knoppix/Maestri/Ejercicio2/E2V1";
+	static const char * path = "/home/knoppix/Maestri/Ejercicio2/E2V3";
 
 	enum class QueueIdentifier
 		: int {
