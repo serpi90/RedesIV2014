@@ -21,9 +21,9 @@ iRobot1aParteArmado::iRobot1aParteArmado(unsigned number) {
 	Queue<IdManager::messageReply> * fromIdManager;
 	IdManager::messageReply idReply;
 
-	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_INTERFACE_TO_WRAPPER, owner);
 	toIdManager->get();
-	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_UNWRAPPER_TO_INTERFACE, owner);
 	fromIdManager->get();
 
 	idRequest.mtype = (long) IPC::MessageTypes::ROBOT_1_ARMADO;
@@ -35,7 +35,7 @@ iRobot1aParteArmado::iRobot1aParteArmado(unsigned number) {
 	this->number = number;
 	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	aBroker->get();
-	colaArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_CTL_TO_INTERFACE, owner);
+	colaArmado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_UNWRAPPER_TO_INTERFACE, owner);
 	colaArmado->get();
 	toPlataforma = new Queue<ColaPlataforma::message>(IPC::path, (int) IPC::QueueIdentifier::FROM_INTERFACE_TO_PLATAFORMA, owner);
 	toPlataforma->get();

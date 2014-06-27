@@ -11,7 +11,7 @@ int main() {
 	Net::interfaceMessage output;
 	std::string owner = "net-wrapper-armado";
 
-	in = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_CTL, owner);
+	in = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_FROM_DISP_TO_WRAPPER, owner);
 	in->get();
 	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_WRAPPER_TO_NET, owner);
 	out->get();

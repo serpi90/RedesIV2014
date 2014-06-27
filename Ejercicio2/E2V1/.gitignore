@@ -12,7 +12,6 @@ lanzador
 lanzadorCliente
 nbproject
 net-idManager
-net-idManager-forwarder
 net-receiver
 net-sender
 net-unwrapper
@@ -20,6 +19,7 @@ net-wrapper-activado
 net-wrapper-armado
 net-wrapper-broker
 net-wrapper-dispositivo
+net-wrapper-idm
 net-wrapper-salida
 net-wrapper-syncMessage
 *.o

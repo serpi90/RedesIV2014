@@ -3,48 +3,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <string>
-#include <set>
 
 #include "Config.h"
 #include "Helper.h"
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
 #include "Socket.h"
-
-void notifyBrokerIfNecessary(Queue<Broker::message> * q, long cNr, Net::interfaceMessage m) {
-	static std::set<long> knownIds;
-	long mtype = 0;
-	Broker::message msg;
-	switch (m.type) {
-		case Net::interfaceMessageType::ACTIVADO:
-			mtype = m.activado.mtype;
-			break;
-		case Net::interfaceMessageType::ARMADO:
-			mtype = m.armado.mtype;
-			break;
-		case Net::interfaceMessageType::DISPOSITIVO:
-			mtype = m.dispositivo.mtype;
-			break;
-		case Net::interfaceMessageType::BROKER_REQUEST:
-			mtype = m.broker_request.mtype;
-			break;
-		case Net::interfaceMessageType::SALIDA:
-			mtype = m.salida.mtype;
-			break;
-		default:
-			return;
-	}
-	if (mtype) {
-		if (knownIds.find(mtype) == knownIds.end()) {
-			knownIds.insert(mtype);
-			msg.request = Broker::Request::NEW_ID;
-			msg.mtype = mtype;
-			msg.connNumber = cNr;
-			q->send(msg);
-		}
-	}
-}
 
 int main() {
 	std::string owner = "broker-receiver";
@@ -60,6 +27,8 @@ int main() {
 	Queue<ColaPlataforma::syncMessage> * syncPlat;
 	Net::message msg;
 	Net::interfaceMessage incomingMessage;
+	Queue<IdManager::messageRequest> * idReq;
+	Broker::message request;
 	size_t bytes, expectedBytes = sizeof(msg);
 	long connectionNumber = 1;
 
@@ -78,6 +47,8 @@ int main() {
 	toBroker->get();
 	syncPlat = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_BROKER, owner);
 	syncPlat->get();
+	idReq = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_BROKER, owner);
+	idReq->get();
 
 	master = new Socket(owner);
 	if (master->passive(port) == -1) {
@@ -103,7 +74,6 @@ int main() {
 				bytes = connection->receive((char*) &msg, expectedBytes);
 				if (bytes == expectedBytes) {
 					memcpy((void*) &incomingMessage, (void*) msg.message, msg.size);
-					notifyBrokerIfNecessary(toBroker, connectionNumber, incomingMessage);
 					// Envio el mensaje a la cola que coresponde.
 					switch (incomingMessage.type) {
 						case Net::interfaceMessageType::ACTIVADO:
@@ -129,6 +99,14 @@ int main() {
 						case Net::interfaceMessageType::PLATAFORMA_SYNC:
 							Helper::output(stdout, owner + " recibi PLATAFORMA\n", Helper::Colours::BG_CYAN);
 							syncPlat->send(incomingMessage.syncMessage);
+							break;
+						case Net::interfaceMessageType::ID_REQUEST:
+							Helper::output(stdout, owner + " recibi ID_REQUEST\n", Helper::Colours::BG_CYAN);
+							request.mtype = (long) IPC::MessageTypes::BROKER;
+							request.request = Broker::Request::NEW_ID;
+							request.connNumber = connectionNumber;
+							idReq->send(incomingMessage.id_request);
+							toBroker->send(request);
 							break;
 						default:
 							Helper::output(stderr, owner + " mensaje no reconocido\n", Helper::Colours::RED);

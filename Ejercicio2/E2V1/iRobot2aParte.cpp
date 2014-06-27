@@ -19,9 +19,9 @@ iRobot2aParte::iRobot2aParte(long type) {
 	Queue<IdManager::messageReply> * fromIdManager;
 	IdManager::messageReply idReply;
 
-	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_INTERFACE_TO_WRAPPER, owner);
 	toIdManager->get();
-	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_UNWRAPPER_TO_INTERFACE, owner);
 	fromIdManager->get();
 
 	idRequest.mtype = (long) IPC::MessageTypes::ROBOT_1_SACADO;
@@ -33,7 +33,7 @@ iRobot2aParte::iRobot2aParte(long type) {
 	this->type = type;
 	aBroker = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	aBroker->get();
-	colaSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_CTL_TO_INTERFACE, owner);
+	colaSalida = new Queue<ColaSalida::message>(IPC::path, (int) IPC::QueueIdentifier::SALIDA_FROM_UNWRAPPER_TO_INTERFACE, owner);
 	colaSalida->get();
 }
 

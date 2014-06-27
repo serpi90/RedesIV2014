@@ -11,7 +11,7 @@ int main() {
 	Net::interfaceMessage imsg;
 	std::string owner = "net-wrapper-syncMessage";
 
-	in = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_BROKER, owner);
+	in = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_WRAPPER, owner);
 	in->get();
 	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_WRAPPER_TO_NET, owner);
 	out->get();

@@ -11,7 +11,7 @@ int main() {
 	Net::interfaceMessage imsg;
 	std::string owner = "net-wrapper-dispositivo";
 
-	in = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner);
+	in = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_WRAPPER, owner);
 	in->get();
 	out = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::FROM_WRAPPER_TO_NET, owner);
 	out->get();

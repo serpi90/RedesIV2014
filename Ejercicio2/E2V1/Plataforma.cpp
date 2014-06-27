@@ -43,9 +43,9 @@ Plataforma::Plataforma() {
 	Queue<IdManager::messageReply> * fromIdManager;
 	IdManager::messageReply idReply;
 
-	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::TO_ID_MANAGER, owner);
+	toIdManager = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_INTERFACE_TO_WRAPPER, owner);
 	toIdManager->get();
-	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::FROM_ID_MANAGER, owner);
+	fromIdManager = new Queue<IdManager::messageReply>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_FROM_UNWRAPPER_TO_INTERFACE, owner);
 	fromIdManager->get();
 
 	idRequest.mtype = (long) IPC::MessageTypes::PLATAFORMA;
@@ -62,11 +62,11 @@ Plataforma::Plataforma() {
 	shm = new SharedMemory<shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::PLATAFORMA, owner);
 	shm->get();
 	SHM = shm->attach();
-	colaDeDispositivo = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_CTL, owner);
+	colaDeDispositivo = new Queue<ColaDispositivo::message>(IPC::path, (int) IPC::QueueIdentifier::DISPOSITIVOS_FROM_PLATAFORMA_TO_WRAPPER, owner);
 	colaDeDispositivo->get();
-	toBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_BROKER, owner);
+	toBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_TO_WRAPPER, owner);
 	toBroker->get();
-	fromBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_FROM_BROKER, owner);
+	fromBroker = new Queue<ColaPlataforma::syncMessage>(IPC::path, (int) IPC::QueueIdentifier::PLATAFORMA_FROM_UNWRAPPER, owner);
 	fromBroker->get();
 	brokerRequests = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner);
 	brokerRequests->get();

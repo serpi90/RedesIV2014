@@ -4,9 +4,10 @@
 #include <string>
 
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
-#include "SharedMemory.cpp"
 #include "Semaphore.h"
+#include "SharedMemory.cpp"
 
 using namespace IPC;
 
@@ -21,8 +22,12 @@ int main() {
 	Queue<Broker::message> * brk;
 	Queue<Broker::outgoingMessage> * brko;
 	Queue<ColaPlataforma::syncMessage> * syncPlat;
+	Queue<IdManager::messageRequest> * idmReq;
 	Semaphore * mutex;
 	SharedMemory<ColaPlataforma::shared> * shm;
+
+	idmReq = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_BROKER, owner);
+	idmReq->create();
 
 	shm = new SharedMemory<ColaPlataforma::shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_PLAT, owner);
 	shm->create();

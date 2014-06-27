@@ -8,24 +8,28 @@
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+//#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
 #include <utility>
 
+#include "Config.h"
 #include "Helper.h"
 #include "includes.h"
+#include "net-idManagerProtocol.h"
 #include "Queue.cpp"
-#include "SharedMemory.cpp"
 #include "Semaphore.h"
+#include "SharedMemory.cpp"
+#include "Socket.h"
 
 namespace Broker {
 	class Broker {
 		public:
 			Broker() {
 				owner = "broker";
-
+				idReq = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_BROKER, owner);
+				idReq->get();
 				activado = new Queue<ColaActivado::message>(IPC::path, (int) IPC::QueueIdentifier::ACTIVADO_BROKER, owner);
 				activado->get();
 				armado = new Queue<ColaArmado::message>(IPC::path, (int) IPC::QueueIdentifier::ARMADO_BROKER, owner);
@@ -51,11 +55,34 @@ namespace Broker {
 					shmPlataforma->slot[i].status = ColaPlataforma::SlotStatus::FREE;
 				}
 
+				Config cfg("network.conf");
+				std::string server = cfg.getString("id manager address", "localhost");
+				unsigned short port = cfg.getInt("id manager port", 6111);
+				toIdManager = new Socket(owner);
+				if (toIdManager->active(server, port) == -1) {
+					Helper::output(stdout, owner + " conexion con idManager fallo\n", Helper::Colours::RED);
+					exit(EXIT_FAILURE);
+				}
+
 			}
 
-			void addNewId(long id, long connectionNumber) {
-				mtypeToConnection.insert(std::make_pair(id, connectionNumber));
+			void addNewId(long connectionNumber) {
+				outgoingMessage response;
+				IdManager::message message;
+				IdManager::messageRequest request;
+				request = idReq->receive((long) IPC::MessageTypes::ANY);
+				message.type = IdManager::MessageType::REGISTER_HOST;
+				message.register_host.kind = request.kind;
+				toIdManager->send((char*) &message, sizeof(message));
+				toIdManager->receive((char*) &message, sizeof(message));
+				mtypeToConnection.insert(std::make_pair(message.register_host.mtype, connectionNumber));
+				response.mtype = connectionNumber;
+				response.interfaceMessage.type = Net::interfaceMessageType::ID_REPLY;
+				response.interfaceMessage.id_reply.id = message.register_host.mtype;
+				response.interfaceMessage.id_reply.mtype = request.mtype;
+				toSender->send(response);
 			}
+
 			void avisameSiEstoyArmado(long id) {
 				outgoingMessage msg;
 
@@ -195,11 +222,13 @@ namespace Broker {
 			Queue<outgoingMessage> * toSender;
 			Queue<ColaPlataforma::syncMessage> * syncPlat;
 			SharedMemory<ColaPlataforma::shared> * shm;
+			Queue<IdManager::messageRequest> * idReq;
 
 			Semaphore * mutex;
 			std::map<long, long> mtypeToConnection;
 			std::string owner;
 			ColaPlataforma::shared * shmPlataforma;
+			Socket * toIdManager;
 	};
 }
 
@@ -218,7 +247,7 @@ int main() {
 			case Broker::Request::NEW_ID:
 				ss << owner << " recibi NEW_ID " << incoming.mtype << " conn: " << incoming.connNumber << std::endl;
 				Helper::output(stdout, ss, Helper::Colours::BG_YELLOW);
-				broker.addNewId(incoming.mtype, incoming.connNumber);
+				broker.addNewId(incoming.connNumber);
 				break;
 			case Broker::Request::AVISAME_SI_ESTOY_ARMADO:
 				ss << owner << " recibi AVISAME_SI_ESTOY_ARMADO de " << incoming.mtype << std::endl;
