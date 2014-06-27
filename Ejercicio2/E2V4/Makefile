@@ -11,13 +11,14 @@ HELPER = Config.o Helper.o
 INTERFACES = iRobot1aParteArmado.o  iRobot1aParteSacado.o  iRobot2aParte.o
 COMPONENTES = ExclusionRobots Plataforma
 MODELO = dispositivo robot1aParteArmado robot1aParteSacado robot2aParte
-UTILITARIOS = iniciadorCliente iniciadorIdManager iniciadorBroker lanzadorCliente terminador
+UTILITARIOS = iniciadorCliente iniciadorIdManager iniciadorBroker terminador
 WRAPPERS = net-wrapper-activado net-wrapper-armado net-wrapper-dispositivo net-wrapper-salida net-wrapper-broker net-wrapper-syncMessage net-wrapper-idm
 NETWORK = net-receiver net-sender $(WRAPPERS) net-unwrapper broker-sender broker-receiver
+RING = ArmarAnillo.o
 IDM = net-idManager 
 BROKER = broker
 programs = $(COMPONENTES) $(MODELO) $(UTILITARIOS) $(NETWORK) $(IDM) $(BROKER)
-objects = $(HELPER) $(IPC) $(INTERFACES)
+objects = $(HELPER) $(IPC) $(INTERFACES) $(RING)
 
 all: $(objects) $(programs)
 
@@ -28,10 +29,13 @@ count:
 	echo $(programs) | wc -w
 
 clean:
-	$(RM) $(objects) $(programs) ids.dat
+	$(RM) $(objects) $(programs) ids.dat broker.dat
 
-$(BROKER): % : %.cpp $(IPC) $(HELPER) includes.h net-idManagerProtocol.h
-	g++ -o $@ $< $(HELPER) $(IPC) $(CFLAGS)
+$(RING): %.o : %.cpp %.h Socket.h includes.h
+	g++ -c -o $@ $< $(CFLAGS)
+
+$(BROKER): % : %.cpp $(IPC) $(HELPER) $(RING) includes.h net-idManagerProtocol.h
+	g++ -o $@ $< $(HELPER) $(IPC)  $(RING) $(CFLAGS)
 
 $(NETWORK): % : %.cpp Socket.o Queue.o $(HELPER) 
 	g++ -o $@ $< $(HELPER) Socket.o Queue.o $(CFLAGS)

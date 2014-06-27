@@ -6,7 +6,7 @@
 namespace IdManager {
 
 	enum class MessageType {
-		REGISTER_HOST, GET_BROKER
+		REGISTER_HOST, GET_BROKER, REGISTER_BROKER
 	};
 
 	enum class HostKind {

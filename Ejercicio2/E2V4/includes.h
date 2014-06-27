@@ -45,7 +45,8 @@ namespace IPC {
 		SALIDA_FROM_UNWRAPPER_TO_INTERFACE = 24,
 		TO_BROKER = 25,
 		TO_BROKER_FROM_RECEIVER = 26,
-		TO_SENDER_FROM_BROKER = 27
+		TO_SENDER_FROM_BROKER = 27,
+		TO_BROKER_FROM_BROKER = 28
 
 	};
 
@@ -57,12 +58,19 @@ namespace IPC {
 		SEM_EXCLUSION,
 		SEM_ESPERA,
 		MUTEX_ID_MANAGER,
-		MUTEX_BROKER_SYNC
+		MUTEX_BROKER_SYNC,
+		TENGO_TOKEN,
+		MUTEX_TOKEN,
+		DEVUELVO_TOKEN
 	};
 
 	enum class SharedMemoryIdentifier
 		: int {
-			INVALID_IDENTIFIER = 0, EXCLUSION, PLATAFORMA, BROKER_PLAT
+			INVALID_IDENTIFIER = 0,
+		EXCLUSION,
+		PLATAFORMA,
+		BROKER_PLAT,
+		BROKER_TOKEN
 	};
 
 	enum class MessageTypes
@@ -232,6 +240,14 @@ namespace Net {
 }
 
 namespace Broker {
+	struct token {
+			ColaPlataforma::shared shm;
+	};
+	struct tokenShm {
+			unsigned necesitoToken;
+			struct token token;
+	};
+
 	struct outgoingMessage {
 			long mtype;
 			Net::interfaceMessage interfaceMessage;

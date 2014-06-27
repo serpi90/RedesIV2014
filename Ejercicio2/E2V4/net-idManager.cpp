@@ -20,24 +20,38 @@ namespace IdManager {
 	class IdManager {
 		public:
 
-			IdManager(std::string filename) {
-				this->filename = filename;
-				this->data = readFile(filename);
+			IdManager(std::string filenameHost, std::string filenameBroker) {
+				this->filenameHost = filenameHost;
+				this->dataHost = readFile(filenameHost);
+				this->filenameBroker = filenameBroker;
+				this->dataBroker = readFile(filenameBroker);
 			}
 
 			~IdManager() {
-				clearData(&data);
+				clearData(&dataHost);
+				clearData(&dataBroker);
 			}
 
 			long register_host(HostKind k, char * address) {
-				this->data = readFile(filename);
+				this->dataHost = readFile(filenameHost);
 				hostInfo host;
 				strncpy(host.address, address, MAX_ADDRESS_LENGTH);
-				host.mtype = data.nextMtype++;
+				host.mtype = dataHost.nextMtype++;
 				host.kind = k;
-				this->addHost(&(data.hosts), host);
-				this->writeFile(filename.c_str(), data);
+				this->addHost(&(dataHost.hosts), host);
+				this->writeFile(filenameHost.c_str(), dataHost);
 				return host.mtype;
+			}
+
+			long register_broker(HostKind k, char * address) {
+				this->dataBroker = readFile(filenameBroker);
+				hostInfo broker;
+				strncpy(broker.address, address, MAX_ADDRESS_LENGTH);
+				broker.mtype = dataBroker.nextMtype++;
+				broker.kind = k;
+				this->addHost(&(dataBroker.hosts), broker);
+				this->writeFile(filenameBroker.c_str(), dataBroker);
+				return broker.mtype;
 			}
 
 		private:
@@ -57,8 +71,10 @@ namespace IdManager {
 					struct hostArray hosts;
 			};
 
-			struct fileData data;
-			std::string filename;
+			struct fileData dataHost;
+			struct fileData dataBroker;
+			std::string filenameHost;
+			std::string filenameBroker;
 
 			void addHost(struct hostArray *array, struct hostInfo host) {
 				if (array->hosts) {
@@ -69,9 +85,9 @@ namespace IdManager {
 				array->hosts[array->amount++] = host;
 			}
 
-			struct fileData readFile(std::string filename) {
+			struct fileData readFile(std::string filenameHost) {
 				struct fileData data;
-				FILE * file = fopen(filename.c_str(), "rb");
+				FILE * file = fopen(filenameHost.c_str(), "rb");
 				if (file) {
 					if (fread(&(data.nextMtype), sizeof(data.nextMtype), 1, file)) {
 						fread(&(data.hosts.amount), sizeof(data.hosts.amount), 1, file);
@@ -94,8 +110,8 @@ namespace IdManager {
 				return data;
 			}
 
-			bool writeFile(const char * filename, struct fileData data) {
-				FILE * file = fopen(filename, "wb");
+			bool writeFile(const char * filenameHost, struct fileData data) {
+				FILE * file = fopen(filenameHost, "wb");
 				if (file) {
 					fwrite(&(data.nextMtype), sizeof(data.nextMtype), 1, file);
 					fwrite(&(data.hosts.amount), sizeof(data.hosts.amount), 1, file);
@@ -138,7 +154,7 @@ int main() {
 	sigchld_action.sa_flags = SA_NOCLDWAIT;
 	sigaction(SIGCHLD, &sigchld_action, NULL);
 
-	idm = new IdManager::IdManager("ids.dat");
+	idm = new IdManager::IdManager("ids.dat", "broker.dat");
 
 	master = new Socket("net-idManager");
 	if (master->passive(port) == -1) {
@@ -168,6 +184,15 @@ int main() {
 							mutex->post();
 							ss.str("");
 							ss << "idManager: REGISTER_HOST " << ": " << msg.register_host.mtype << std::endl;
+							Helper::output(stdout, ss, Helper::Colours::GREEN);
+							connection->send((char*) &msg, sizeof(msg));
+							break;
+						case IdManager::MessageType::REGISTER_BROKER:
+							address = inet_ntoa(connection->getRemoteAddress());
+							msg.register_host.mtype = idm->register_broker(msg.register_host.kind, address);
+							mutex->post();
+							ss.str("");
+							ss << "idManager: REGISTER_BROKER " << ": " << msg.register_host.mtype << std::endl;
 							Helper::output(stdout, ss, Helper::Colours::GREEN);
 							connection->send((char*) &msg, sizeof(msg));
 							break;

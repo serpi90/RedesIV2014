@@ -5,15 +5,17 @@
  *      Author: julian
  */
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
-//#include <cstring>
-#include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <utility>
 
+#include "ArmarAnillo.h"
 #include "Config.h"
 #include "Helper.h"
 #include "includes.h"
@@ -26,7 +28,7 @@
 namespace Broker {
 	class Broker {
 		public:
-			Broker() {
+			Broker(bool master) {
 				owner = "broker";
 				idReq = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_BROKER, owner);
 				idReq->get();
@@ -64,6 +66,108 @@ namespace Broker {
 					exit(EXIT_FAILURE);
 				}
 
+				IdManager::message idRequest;
+				idRequest.register_host.kind = IdManager::HostKind::BROKER;
+				idRequest.type = IdManager::MessageType::REGISTER_BROKER;
+				toIdManager->send((char*) &idRequest, sizeof(idRequest));
+				toIdManager->receive((char*) &idRequest, sizeof(idRequest));
+				this->id = idRequest.register_host.mtype;
+
+				mutexToken = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_TOKEN, owner);
+				mutexToken->get();
+				tengoToken = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::TENGO_TOKEN, owner);
+				tengoToken->get();
+				devuelvoToken = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::DEVUELVO_TOKEN, owner);
+				devuelvoToken->get();
+
+				shmToken = new SharedMemory<tokenShm>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_TOKEN, owner);
+				shmToken->get();
+				tokenData = shmToken->attach();
+
+				pid_t pid = fork();
+				if (pid == 0) {
+					// establezcon el anillo
+					unsigned short udp_port, mcast_port, tcp_port;
+					std::string multicast_adddress;
+					Config bcfg("broker.conf");
+					udp_port = bcfg.getInt("udp port", 7777);
+					tcp_port = bcfg.getInt("tcp port", 8888);
+					mcast_port = bcfg.getInt("multicast port", 9999);
+					multicast_adddress = bcfg.getString("multicast address", "255.0.0.99");
+
+					ArmarAnillo * armador;
+					armador = new ArmarAnillo(master, udp_port, multicast_adddress, mcast_port);
+					armador->crearAnillo();
+					armador->crearConexionesTCP(tcp_port, prevBroker, nextBroker);
+
+					struct {
+							long id;
+							struct in_addr address;
+					} myData, brokerData;
+					std::string idCola, idBroker;
+					std::stringstream ss;
+					ss << (int) IPC::QueueIdentifier::TO_BROKER_FROM_BROKER;
+					idCola = ss.str();
+					ss.str("");
+					pid_t pid;
+
+					myData.id = this->id;
+					myData.address = nextBroker->getLocalAddress();
+
+					nextBroker->send((char*) &myData, sizeof(myData));
+					do {
+						prevBroker->receive((char*) &brokerData, sizeof(brokerData));
+						if (myData.id == brokerData.id) {
+							nextBroker->send((char*) &brokerData, sizeof(brokerData));
+						}
+						ss << brokerData.id;
+						pid = fork();
+						if (pid == 0) {
+							execlp("./inter-broker-sender", "inter-broker-sender", inet_ntoa(brokerData.address), idCola.c_str(), ss.str().c_str(), NULL);
+							perror("inter-broker-sender - execlp: ");
+							exit(EXIT_FAILURE);
+						} else if (pid < 0) {
+							perror("inter-broker-sender - fork: ");
+						}
+						ss.str("");
+					} while (myData.id != brokerData.id);
+					// Lanzar token;
+					token token;
+					token.shm = *shmPlataforma;
+
+					if (master) {
+						nextBroker->send((char*) &token, sizeof(token));
+					}
+					while (true) {
+						// Recibo token
+						prevBroker->receive((char*) &token, sizeof(token));
+
+						// TODO Zaraza token + colas
+
+						mutexToken->wait();
+						// Si lo necesitan l
+						if (tokenData->necesitoToken > 0) {
+							tokenData->token = token;
+							mutexToken->post();
+
+							tengoToken->post();
+							devuelvoToken->wait();
+
+							mutexToken->wait();
+							token = tokenData->token;
+							mutexToken->post();
+						} else {
+							mutexToken->post();
+						}
+
+						nextBroker->send((char*) &token, sizeof(token));
+					}
+					exit(EXIT_FAILURE);
+
+				} else if (pid < 0) {
+					perror("fork receptor token");
+					exit(EXIT_FAILURE);
+				}
 			}
 
 			void addNewId(long connectionNumber) {
@@ -160,7 +264,18 @@ namespace Broker {
 				pid_t pid = fork();
 				if (pid == 0) {
 					// Atiendo 1 solicitud de shm por vez.
+					// TODO creo que puedo sacar la exclusion, ya que espero sobre tengoToken
 					mutex->wait();
+					// Pido el token
+					mutexToken->wait();
+					tokenData->necesitoToken++;
+					mutexToken->post();
+					// Espero a que me den el token
+					tengoToken->wait();
+					// Me copio la shm del token
+					mutexToken->wait();
+					*shmPlataforma = tokenData->token.shm;
+					mutexToken->post();
 
 					// Envio la shm
 					msg.interfaceMessage.syncMessage.mtype = id;
@@ -172,36 +287,14 @@ namespace Broker {
 					updated = syncPlat->receive(id);
 					Helper::output(stdout, owner + " plataforma devolvio la shm.\n", Helper::Colours::BG_BLUE);
 					*shmPlataforma = updated.shm;
-					std::stringstream ss;
-					ss << "amount: " << shmPlataforma->amount;
-					for (unsigned i = 0; i < ROBOT_AMOUNT; i++) {
-						ss << " status " << i;
-						switch (shmPlataforma->robotStatus[i]) {
-							case ColaPlataforma::RobotStatus::NOT_WAITING:
-								ss << " NOT_WAITING";
-								break;
-							case ColaPlataforma::RobotStatus::WAITING:
-								ss << " WAITING";
-								break;
-						}
-					}
-					ss << std::endl;
-					for (unsigned i = 0; i < PLATFORM_CAPACITY; i++) {
-						ss << i << ": ";
-						switch (shmPlataforma->slot[i].status) {
-							case ColaPlataforma::SlotStatus::FREE:
-								ss << "FREE ";
-								break;
-							case ColaPlataforma::SlotStatus::RESERVED:
-								ss << "RSVD ";
-								break;
-							case ColaPlataforma::SlotStatus::OCCUPIED:
-								ss << "OCPD ";
-								break;
-						}
-					}
-					ss << std::endl;
-					Helper::output(stdout, ss);
+
+					// copio la actualizada al token
+					mutexToken->wait();
+					tokenData->token.shm = *shmPlataforma;
+					tokenData->necesitoToken--;
+					mutexToken->post();
+					// Aviso que se pueden llevar el token
+					devuelvoToken->post();
 
 					mutex->post();
 					exit(EXIT_SUCCESS);
@@ -223,24 +316,30 @@ namespace Broker {
 			Queue<ColaPlataforma::syncMessage> * syncPlat;
 			SharedMemory<ColaPlataforma::shared> * shm;
 			Queue<IdManager::messageRequest> * idReq;
+			SharedMemory<tokenShm> * shmToken;
+			Semaphore * tengoToken, *devuelvoToken, *mutexToken;
+			tokenShm * tokenData;
 
 			Semaphore * mutex;
 			std::map<long, long> mtypeToConnection;
 			std::string owner;
 			ColaPlataforma::shared * shmPlataforma;
-			Socket * toIdManager;
+			Socket * toIdManager, *nextBroker, *prevBroker;
+			long id;
 	};
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	Queue<Broker::message> * fromReceiver;
 	Broker::message incoming;
 	std::string owner = "broker";
 
+	bool first = argc > 1 && strcmp("primero", argv[1]) == 0;
+
 	fromReceiver = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_RECEIVER, owner);
 	fromReceiver->get();
 	std::stringstream ss;
-	Broker::Broker broker;
+	Broker::Broker broker(first);
 	while (true) {
 		incoming = fromReceiver->receive((long) IPC::MessageTypes::ANY);
 		switch (incoming.request) {

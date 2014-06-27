@@ -30,11 +30,31 @@ int main() {
 
 	Queue<IdManager::messageRequest> * idmReq;
 
+	SharedMemory<Broker::tokenShm> * shmToken;
+	Semaphore * s;
+	s = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_TOKEN, owner, false);
+	s->get();
+	s->remove();
+	s = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::TENGO_TOKEN, owner, false);
+	s->get();
+	s->remove();
+	s = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::DEVUELVO_TOKEN, owner, false);
+	s->get();
+	s->remove();
+
+	shmToken = new SharedMemory<Broker::tokenShm>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_TOKEN, owner, false);
+	shmToken->get();
+	shmToken->remove();
+
 	idmReq = new Queue<IdManager::messageRequest>(IPC::path, (int) IPC::QueueIdentifier::ID_MANAGER_BROKER, owner, false);
 	idmReq->get();
 	idmReq->remove();
 
 	Semaphore * mutexBrk;
+
+	net = new Queue<Net::interfaceMessage>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER_FROM_BROKER, owner, false);
+	net->get();
+	net->remove();
 
 	mutexBrk = new Semaphore(IPC::path, (int) IPC::SemaphoreIdentifier::MUTEX_BROKER_SYNC, owner, false);
 	mutexBrk->get();
@@ -174,5 +194,5 @@ int main() {
 	system("pkill -9 net-receiver");
 	system("pkill -9 broker-receiver");
 	system("pkill -9 broker-sender");
-	system("rm -f ids.dat");
+	system("rm -f ids.dat broker.dat");
 }
