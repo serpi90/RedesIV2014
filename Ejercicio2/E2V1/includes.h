@@ -5,7 +5,7 @@
 
 #define ROBOT_AMOUNT 4
 #define PLATFORM_CAPACITY 10
-#define DISPOSITIVE_TYPES 1
+#define DISPOSITIVE_TYPES 2
 #define NET_MESSAGE_SIZE 8192
 
 #include <unistd.h>

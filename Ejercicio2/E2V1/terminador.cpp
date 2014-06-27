@@ -36,6 +36,7 @@ int main() {
 	SharedMemory<ColaPlataforma::shared> * shm;
 	shm = new SharedMemory<ColaPlataforma::shared>(IPC::path, (int) IPC::SharedMemoryIdentifier::BROKER_PLAT, owner, false);
 	shm->get();
+	shm->remove();
 
 	brk = new Queue<Broker::message>(IPC::path, (int) IPC::QueueIdentifier::TO_BROKER, owner, false);
 	brk->get();

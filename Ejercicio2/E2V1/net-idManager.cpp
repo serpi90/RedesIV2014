@@ -30,6 +30,7 @@ namespace IdManager {
 			}
 
 			long register_host(HostKind k, char * address) {
+				this->data = readFile(filename);
 				hostInfo host;
 				strncpy(host.address, address, MAX_ADDRESS_LENGTH);
 				host.mtype = data.nextMtype++;
